@@ -90,21 +90,25 @@ const locationLabels: Record<JobLocation, string> = {
   HYBRID: 'Hybrid',
 };
 
-export default function ApplicationsPage() {
-  const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<JobStatus | 'ALL'>('ALL');
-  const [jobs, setJobs] = useState(mockJobs);
-  const [newJob, setNewJob] = useState<Partial<Job>>({
-    companyName: '',
+const initialJob: Partial<Job> = {
+  companyName: '',
     positionTitle: '',
     location: 'REMOTE',
     salaryExpectation: undefined,
     jobDescriptionLink: '',
     status: 'SAVED',
-  });
+}
+
+export default function ApplicationsPage() {
+  const { toast } = useToast();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<JobStatus | 'ALL'>('ALL');
+  const [jobs, setJobs] = useState(mockJobs);
+  const [newJob, setNewJob] = useState<Partial<Job>>(initialJob);
+  const [editedJob, setEditedJob] = useState<Partial<Job>>(initialJob);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
 
   const filteredJobs = jobs.filter((job) => {
@@ -147,6 +151,27 @@ export default function ApplicationsPage() {
       title: 'Status Updated',
       description: `Application status updated to ${statusLabels[newStatus]}.`,
     });
+  };
+
+  const hadleEditJob = (jobId: string, editedJob: Job) => {
+    setJobs(jobs.map(job => 
+      job.id === jobId ? { ...editedJob } : job
+    ));
+    setIsEditDialogOpen(false);
+    setSelectedJob(null);
+    toast({
+      title: 'Application Updated',
+      description: `Your job application has been updated successfully.`,
+    }); 
+  }
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setEditedJob((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (jobId: string) => {
+    hadleEditJob(jobId, editedJob as Job);
   };
 
   return (
@@ -347,6 +372,51 @@ export default function ApplicationsPage() {
                               {label}
                             </Button>
                           ))}
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                    <Dialog
+                      open={isEditDialogOpen && selectedJob?.id === job.id}
+                      onOpenChange={(open) => {
+                        setEditedJob(job);
+                        setIsEditDialogOpen(open);
+                        if (!open) {
+                          setSelectedJob(null);
+                          setEditedJob(initialJob);
+                        }
+                      }}
+                    >
+                      <DialogTrigger asChild>
+                        <Button variant="outline" size="sm" onClick={() => setSelectedJob(job)}>
+                          Edit Job
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Edit Job Details</DialogTitle>
+                          <DialogDescription>
+                            Modify the details for <strong>{job.positionTitle}</strong> at <strong>{job.companyName}</strong>
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <Label>Position Title</Label>
+                          <Input name="positionTitle" value={editedJob.positionTitle} onChange={handleChange} />
+
+                          <Label>Company Name</Label>
+                          <Input name="companyName" value={editedJob.companyName} onChange={handleChange} />
+
+                          <Label>Location</Label>
+                          <Input name="location" value={editedJob.location} onChange={handleChange} />
+
+                          <Label>Salary Expectation</Label>
+                          <Input type="number" name="salaryExpectation" value={editedJob.salaryExpectation} onChange={handleChange} />
+
+                          <Label>Job Description Link</Label>
+                          <Input name="jobDescriptionLink" value={editedJob.jobDescriptionLink} onChange={handleChange} />
+                        </div>
+                        <div className="flex justify-end space-x-2 mt-4">
+                          <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                          <Button onClick={() => handleSubmit(selectedJob?.id || '')}>Save Changes</Button>
                         </div>
                       </DialogContent>
                     </Dialog>

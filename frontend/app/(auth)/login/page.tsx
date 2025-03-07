@@ -9,14 +9,14 @@ import { Label } from '../../../components/ui/label';
 import { Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { login } from '../../lib/auth';
-//import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '../../../hooks/use-toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  //const { toast } = useToast();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -24,17 +24,17 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      // toast({
-      //   title: 'Success',
-      //   description: 'Successfully logged in!',
-      // });
+      toast({
+        title: 'Success',
+        description: 'Successfully logged in!',
+      });
       router.push('/dashboard');
     } catch (error) {
-      // toast({
-      //   title: 'Error',
-      //   description: 'Invalid credentials. Please try again.',
-      //   variant: 'destructive',
-      // });
+      toast({
+        title: 'Error',
+        description: 'Invalid credentials. Please try again.',
+        variant: 'destructive',
+      });
     } finally {
       setIsLoading(false);
     }

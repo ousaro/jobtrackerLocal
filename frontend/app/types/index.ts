@@ -41,6 +41,7 @@ export interface Contact {
   phone?: string;
   linkedIn?: string;
   role: string;
+  workingAt?: string;
 }
 
 export interface User {
