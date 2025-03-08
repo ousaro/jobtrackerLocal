@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ThemeToggle } from '../../components/theme-toggle';
 import {
   Briefcase,
@@ -14,10 +14,13 @@ import {
   Settings,
   Menu,
   User,
+  BookUser,
+  LogOut,
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../../components/ui/sheet';
 import { cn } from '../../lib/utils';
+import { useToast } from '../../hooks/use-toast';
 
 interface NavItem {
   title: string;
@@ -27,11 +30,12 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+  {title: 'Profiles', href: '/dashboard/profiles', icon: Users},
   { title: 'Applications', href: '/dashboard/applications', icon: FileText },
   { title: 'Interviews', href: '/dashboard/interviews', icon: CalendarDays },
-  { title: 'Contacts', href: '/dashboard/contacts', icon: Users },
+  { title: 'Contacts', href: '/dashboard/contacts', icon: BookUser },
   { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart },
-  { title: 'Profile', href: '/dashboard/profile', icon: User },
+  { title: 'Profile', href: '/dashboard/profiles/1', icon: User }, // TODO: Replace with actual user ID
   { title: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
@@ -42,6 +46,24 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const router = useRouter();
+  const {toast} = useToast();
+  
+    // Handle logout logic here
+    const handleLogout = () => {
+      // Assuming you're using a global state or context to manage auth state,
+      // clear it here, and then navigate to the login page or home page.
+      // Example for clearing auth state:
+      // clearAuthState();
+      
+      // Navigate to the login page (or home page).
+      router.push('/login');  // Adjust the route as needed
+      toast({
+        title: 'Success',
+        description: 'Successfully logged out!',
+      });
+    };
 
   return (
     <div className="min-h-screen bg-background">
@@ -90,9 +112,14 @@ export default function DashboardLayout({
           <div className="ml-auto flex items-center space-x-4">
             <ThemeToggle />
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard/profile">
+              <Link href="/dashboard/profiles/1"> {/* TODO: Replace with actual user ID */}
                 <User className="h-5 w-5" />
               </Link>
+            </Button>
+            <Button variant="ghost" size="icon" asChild onClick={handleLogout}>
+              <span>
+                <LogOut className="h-5 w-5" />
+              </span>
             </Button>
           </div>
         </div>

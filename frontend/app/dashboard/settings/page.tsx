@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
@@ -13,7 +14,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from '../../../components/ui/select';
-import { Bell, Mail, Shield, Smartphone } from 'lucide-react';
+import { Bell, Mail, Shield, Smartphone, LogOut } from 'lucide-react';
+import { useToast } from '../../../hooks/use-toast';
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -26,6 +28,25 @@ export default function SettingsPage() {
     timezone: 'America/New_York',
     dateFormat: 'MM/DD/YYYY',
   });
+
+
+  const router = useRouter();
+  const {toast} = useToast();
+
+  // Handle logout logic here
+  const handleLogout = () => {
+    // Assuming you're using a global state or context to manage auth state,
+    // clear it here, and then navigate to the login page or home page.
+    // Example for clearing auth state:
+    // clearAuthState();
+    
+    // Navigate to the login page (or home page).
+    router.push('/login');  // Adjust the route as needed
+    toast({
+      title: 'Success',
+      description: 'Successfully logged out!',
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -230,6 +251,13 @@ export default function SettingsPage() {
 
         <div className="flex justify-end">
           <Button>Save Changes</Button>
+        </div>
+
+         {/* Logout Button */}
+         <div className="flex justify-end mt-4">
+          <Button variant="outline" onClick={handleLogout} className="flex items-center gap-2">
+            <LogOut size={16} /> Logout
+          </Button>
         </div>
       </div>
     </div>
