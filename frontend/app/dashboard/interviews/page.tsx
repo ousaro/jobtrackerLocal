@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { format } from "date-fns";
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import { Calendar } from '../../../components/ui/calendar';
@@ -24,7 +25,7 @@ import { Input } from '../../../components/ui/input';
 import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 import { Badge } from '../../../components/ui/badge';
-import { Plus, Calendar as CalendarIcon } from 'lucide-react';
+import { Plus,ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Interview, InterviewType } from '../../types';
 import { useToast } from '../../../hooks/use-toast';
 
@@ -63,19 +64,21 @@ const interviewTypeColors: Record<InterviewType, string> = {
   PHONE: 'bg-yellow-500',
 };
 
+const initialNewInterview: Partial<Interview> = {
+  companyName: '',
+  positionTitle: '',
+  type: 'ONLINE',
+  notes: '',
+  preparationDetails: '',
+}
+
 export default function InterviewsPage() {
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [typeFilter, setTypeFilter] = useState<InterviewType | 'ALL'>('ALL');
   const [interviews, setInterviews] = useState(mockInterviews);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newInterview, setNewInterview] = useState<Partial<Interview>>({
-    companyName: '',
-    positionTitle: '',
-    type: 'ONLINE',
-    notes: '',
-    preparationDetails: '',
-  });
+  const [newInterview, setNewInterview] = useState<Partial<Interview>>(initialNewInterview);
 
   const filteredInterviews = interviews.filter((interview) => {
     const matchesType = typeFilter === 'ALL' || interview.type === typeFilter;
@@ -98,13 +101,7 @@ export default function InterviewsPage() {
     };
 
     setInterviews([...interviews, interview]);
-    setNewInterview({
-      companyName: '',
-      positionTitle: '',
-      type: 'ONLINE',
-      notes: '',
-      preparationDetails: '',
-    });
+    setNewInterview(initialNewInterview);
     setIsAddDialogOpen(false);
     toast({
       title: 'Interview Scheduled',
@@ -167,10 +164,13 @@ export default function InterviewsPage() {
                 <Input
                   id="time"
                   type="time"
-                  value={newInterview.dateTime ? newInterview.dateTime.toString() : ''}
-                  onChange={(e) =>
-                    setNewInterview({ ...newInterview, dateTime: new Date(date?.toDateString() + ' ' + e.target.value) })
-                  }
+                  value={newInterview.dateTime ? format(newInterview.dateTime, "HH:mm") : ''}
+                  onChange={(e) =>{
+                    const [hours, minutes] = e.target.value.split(":");
+                    const updatedDate = date ? new Date(date) : new Date();
+                    updatedDate.setHours(Number(hours), Number(minutes));
+                    setNewInterview({ ...newInterview, dateTime: updatedDate });
+                  }}
                 />
               </div>
               <div className="space-y-2">
@@ -197,6 +197,7 @@ export default function InterviewsPage() {
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
                   id="notes"
+                  className='resize-none'
                   value={newInterview.notes}
                   onChange={(e) =>
                     setNewInterview({ ...newInterview, notes: e.target.value })
@@ -207,6 +208,7 @@ export default function InterviewsPage() {
                 <Label htmlFor="preparation">Preparation Details</Label>
                 <Textarea
                   id="preparation"
+                  className='resize-none'
                   value={newInterview.preparationDetails}
                   onChange={(e) =>
                     setNewInterview({ ...newInterview, preparationDetails: e.target.value })
@@ -224,44 +226,11 @@ export default function InterviewsPage() {
         </Dialog>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-[300px_1fr]">
+      <div className="grid gap-6 md:grid-cols-[350px_1fr]">
         <Card className="p-6">
           <div className="space-y-4">
-            <Calendar
-              mode="single"
-              selected={date}
-              onSelect={setDate}
-              className="rounded-md border"
-              modifiersClassNames={{
-                selected: 'bg-primary text-primary-foreground',
-              }}
-              modifiersStyles={{
-                selected: {
-                  backgroundColor: 'hsl(var(--primary))',
-                  color: 'hsl(var(--primary-foreground))',
-                },
-              }}
-              modifiers={{
-                interview: (date) => interviews.some(
-                  (interview) => interview.dateTime.toDateString() === date.toDateString()
-                ),
-              }}
-              styles={{
-                // day_today: {
-                //   fontWeight: 'bold',
-                // },
-                // day_selected: {
-                //   backgroundColor: 'hsl(var(--primary))',
-                //   color: 'hsl(var(--primary-foreground))',
-                //   borderRadius: '9999px',
-                // },
-                // day_interview: {
-                //   backgroundColor: 'hsl(var(--primary))',
-                //   color: 'hsl(var(--primary-foreground))',
-                //   borderRadius: '9999px',
-                // },
-              }}
-            />
+            <CustomCalendar date={date} setDate={setDate} interviews={interviews} />
+
             <Select
               value={typeFilter}
               onValueChange={(value) => setTypeFilter(value as InterviewType | 'ALL')}
@@ -328,6 +297,133 @@ export default function InterviewsPage() {
           </div>
         </Card>
       </div>
+    </div>
+  );
+}
+
+export function CustomCalendar({
+  date,
+  setDate,
+  interviews,
+}: {
+  date: Date | undefined;
+  setDate: (date: Date | undefined) => void;
+  interviews: { dateTime: Date }[];
+}) {
+  const [view, setView] = useState<"calendar" | "months" | "years">("calendar"); // Controls view mode
+  const [month, setMonth] = useState(new Date()); // Tracks current month
+
+  // Handle day selection and avoid double deselection
+  const handleDaySelect = (selectedDay: Date | undefined) => {
+    if(!selectedDay) return;
+    if (!date || selectedDay?.toDateString() !== date.toDateString()) {
+      setDate(selectedDay); 
+    }
+
+  };
+
+  return (
+    <div className="relative w-full max-w-xs sm:max-w-sm md:max-w-md p-4 border rounded-lg">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-2">
+        <button
+          onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1))}
+          className={`${view === "calendar" ? "block" : "hidden"}`} // Hide in month/year view
+        >
+          <ChevronLeft className="w-5 h-5 text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white" />
+        </button>
+
+        {/* Toggle View: Calendar -> Months -> Years */}
+        <button
+          className="flex items-center gap-2 text-lg font-semibold"
+          onClick={() => setView(view === "calendar" ? "months" : view === "months" ? "years" : "calendar")}
+        >
+          <CalendarIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
+          {view === "calendar"
+            ? month.toLocaleString("default", { month: "long", year: "numeric" })
+            : view === "months"
+            ? month.getFullYear()
+            : "Select a Year"}
+        </button>
+
+        <button
+          onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1))}
+          className={`${view === "calendar" ? "block" : "hidden"}`} // Hide in month/year view
+        >
+          <ChevronRight className="w-5 h-5 text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white" />
+        </button>
+      </div>
+
+      {/* 📆 Calendar View */}
+      {view === "calendar" && (
+        <Calendar
+          mode="single"
+          selected={date}
+          onSelect={handleDaySelect}
+          month={month}
+          onMonthChange={setMonth}
+          modifiers={{
+            interview: (day) =>
+              interviews.some((interview) =>
+                interview.dateTime instanceof Date
+                  ? interview.dateTime.toDateString() === day.toDateString()
+                  : false
+              ),
+          }}
+          modifiersClassNames={{
+            selected: "bg-primary text-primary-foreground rounded-full",
+            interview: "bg-secondary text-secondary-foreground rounded-full",
+            today: "font-bold text-blue-600",
+          }}
+
+          styles={{
+            caption: {display: 'none'},
+          }}
+        />
+      )}
+
+      {/* 📅 Month Selection Grid */}
+      {view === "months" && (
+        <div className="grid grid-cols-3 gap-2">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <button
+              key={i}
+              className={`p-3 rounded-md text-sm ${
+                month.getMonth() === i ? "bg-primary text-white dark:text-black" : "hover:bg-gray-200 dark:hover:bg-gray-700"
+              }`}
+              onClick={() => {
+                setMonth(new Date(month.getFullYear(), i));
+                setView("calendar"); // Return to calendar view
+              }}
+            >
+              {new Date(0, i).toLocaleString("default", { month: "short" })}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* 📆 Year Selection Grid */}
+      {view === "years" && (
+        <div className="grid grid-cols-3 gap-2">
+          {Array.from({ length: 12 }).map((_, i) => {
+            const year = new Date().getFullYear() - 5 + i;
+            return (
+              <button
+                key={year}
+                className={`p-3 rounded-md text-sm ${
+                  month.getFullYear() === year ? "bg-primary text-white dark:text-black" : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                }`}
+                onClick={() => {
+                  setMonth(new Date(year, month.getMonth()));
+                  setView("months"); // Go back to month selection
+                }}
+              >
+                {year}
+              </button>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

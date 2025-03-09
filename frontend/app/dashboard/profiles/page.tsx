@@ -1,10 +1,10 @@
 'use client';
 
 import Link from 'next/link';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
-import { User, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 
 export default function ProfilesPage() {

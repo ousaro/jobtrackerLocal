@@ -17,8 +17,7 @@ import {
 import { Bell, Mail, Shield, Smartphone, LogOut } from 'lucide-react';
 import { useToast } from '../../../hooks/use-toast';
 
-export default function SettingsPage() {
-  const [settings, setSettings] = useState({
+const initialSettings = {
     emailNotifications: true,
     pushNotifications: false,
     applicationUpdates: true,
@@ -27,7 +26,10 @@ export default function SettingsPage() {
     twoFactorAuth: false,
     timezone: 'America/New_York',
     dateFormat: 'MM/DD/YYYY',
-  });
+}
+
+export default function SettingsPage() {
+  const [settings, setSettings] = useState(initialSettings);
 
 
   const router = useRouter();

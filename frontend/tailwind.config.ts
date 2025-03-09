@@ -1,7 +1,7 @@
 import type { Config } from 'tailwindcss/types/config';
 
 const config: Config = {
-  darkMode: 'class',
+  darkMode: 'class', // whenever the class dark is added to the body, the dark mode will be activated
   content: [
     './pages/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',

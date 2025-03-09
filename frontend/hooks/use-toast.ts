@@ -1,4 +1,4 @@
-'use client';
+'use client'; // the purpose of this comment is to prevent the file from being sent to the server
 
 // Inspired by react-hot-toast library
 import * as React from 'react';

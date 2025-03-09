@@ -32,7 +32,6 @@ import { Badge } from '../../../components/ui/badge';
 import { Plus, Search } from 'lucide-react';
 import { Job, JobStatus, JobLocation } from '../../types';
 import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
 import { useToast } from '../../../hooks/use-toast';
 
 const mockJobs: Job[] = [
