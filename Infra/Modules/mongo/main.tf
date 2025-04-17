@@ -1,0 +1,32 @@
+resource "docker_image" "mongo" {
+    name = "mongo:6"
+}
+
+resource "docker_volume" "mongo_data"  {
+    name = "mongo_data"
+}
+
+resource "docker_container" "mongo_user" {
+    name = "mongo-user"
+    image = docker_image.mongo.name
+
+    ports {
+        internal = 27017
+        external = 27018
+    }
+
+    volumes {
+        volume_name = docker_volume.mongo_data.name
+        container_path = "/data/db"
+    }
+
+    networks_advanced {
+        name = var.network_name
+    }
+
+    env = [
+        "MONGO_INITDB_ROOT_USERNAME=${var.mongo_root_username}",
+        "MONGO_INITDB_ROOT_PASSWORD=${var.mongo_root_password}",
+        "MONGO_INITDB_DATABASE=${var.mongo_database}"
+    ]
+}
