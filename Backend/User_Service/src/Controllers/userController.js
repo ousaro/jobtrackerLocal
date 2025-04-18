@@ -1,4 +1,19 @@
 const User = require('../Models/user.js');
+const {publishToQueue} = require('../Config/publisher.js');
+
+const getAllProfiles = async(req, res) => {
+    try {
+        const users = await User.find({});
+        if(users.length === 0) {
+            return res.status(404).json({message: "No users found"});
+        }
+        res.json(users);
+    }
+    catch(e) {
+        console.error(e);
+        res.status(500).json({message: "Server error"});
+    }
+}
 
 const getProfile = async(req, res) => {
     const uid = req.params.uid;
@@ -37,6 +52,8 @@ const addProfile = async(req, res) => {;
             socialLinks
         })
         await user.save();
+        const data = {id: user._id, fullName};
+        publishToQueue(process.env.USER_QUEUE, data); // Publish to RabbitMQ queue
         res.status(201).json({message: "User profile created successfully"});
     }
     catch(e) {
@@ -72,6 +89,7 @@ const updateProfile = async(req, res) => {
 }
 
 module.exports = {
+    getAllProfiles,
     getProfile,
     addProfile,
     updateProfile

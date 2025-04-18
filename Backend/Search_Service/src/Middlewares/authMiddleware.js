@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 
 // Load the public key from the PEM file
-const PUBLIC_KEY = fs.readFileSync(path.join(__dirname, '../keys/public.pem'), 'utf8');
+const PUBLIC_KEY = fs.readFileSync(path.join(__dirname, '../../keys/public.pem'), 'utf8');
 
 function authMiddleware(req, res, next) {
   const authHeader = req.headers['authorization'];

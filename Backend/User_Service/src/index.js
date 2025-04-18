@@ -1,16 +1,21 @@
 const express = require("express");
 const cors = require("cors");
 const mongoose = require("mongoose");
-const userRoutes = require("./Routes/userRoutes");
+const authMiddleware = require("./Middlewares/authMiddleware");
 require("dotenv").config();
 
+// Load environment variables from .env file
+const PORT = process.env.PORT || 3001;
+
+// Routers
+const userRoutes = require("./Routes/userRoutes");
+
 const app = express();
-const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/users", userRoutes);
+app.use("/api/users/profile",authMiddleware, userRoutes);
 
 
 mongoose.connect(process.env.MONGO_URI, {
@@ -19,8 +24,9 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => {
     console.log("MongoDB connected successfully");
+    app.listen(PORT, () => console.log(`User service running on port ${PORT}`));
 }).catch((e) => {
     console.error("MongoDB connection error:", e.message);
 })
 
-app.listen(PORT, () => console.log(`User service running on port ${PORT}`));
+

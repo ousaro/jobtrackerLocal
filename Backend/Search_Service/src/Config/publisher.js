@@ -7,11 +7,11 @@ async function connect() {
     connection = await amqp.connect(process.env.RABBITMQ_URL);
     channel = await connection.createChannel();
   }
-  return [channel, connection];
+  return channel;
 }
 
 async function publishToQueue(queue, payload) {
-  const [ch, conn] = await connect();
+  const ch = await connect();
   try {
     await ch.assertQueue(queue);
     ch.sendToQueue(queue, Buffer.from(JSON.stringify(payload)));

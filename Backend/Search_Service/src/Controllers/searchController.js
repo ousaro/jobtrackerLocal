@@ -1,6 +1,11 @@
 const {getIndex} = require("../Config/meili");
 const axios = require("axios");
 
+const highlightPerType = {
+  users: ['fullName'],
+  contacts: ['fullName', 'phoneNumber'],
+  applications: ['company', 'description'],
+}
 
 const searchByType = async (req, res) => {
     const { type } = req.params; // users, contacts, applications
@@ -9,7 +14,7 @@ const searchByType = async (req, res) => {
       const index = getIndex(type);
       const result = await index.search(query, {
         limit: 10,
-        attributesToHighlight: ['name', 'email', 'company'], // adjust per type
+        attributesToHighlight: highlightPerType[type], // adjust per type
       });
   
       const hits = result.hits.map(hit => ({
@@ -17,6 +22,8 @@ const searchByType = async (req, res) => {
         _score: hit._rankingScore,
         highlight: hit._formatted,
       }));
+
+      console.log(`[✅] Search result for ${type}:`, result.hits);
   
       res.json(hits);
     } catch (err) {
