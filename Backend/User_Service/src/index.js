@@ -1,34 +1,26 @@
-const express = require('express');
-const db = require('mongoose');
-const userRoutes = require('./Routes/users');
-const User = require('./Models/user.js');
+const express = require("express");
+const cors = require("cors");
+const mongoose = require("mongoose");
+const userRoutes = require("./Routes/userRoutes");
+require("dotenv").config();
 
-require('dotenv').config();
-
-const MONGO_URI= "mongodb://oumeri:PantryScanner2024@localhost:27018/user-service?authSource=admin";
- 
 const app = express();
-app.use(express.json());
-app.use('/users', userRoutes);
-
 const PORT = process.env.PORT || 3000;
 
-db.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-.then(() => {
-    app.listen(PORT, () => {
-        console.log(`Database connected successfully`);
-        console.log(`Server is running on port ${PORT}`);
-      });
-}).then(() => {
-    const user = new User({
-        fullName: "John Doe",
-        email: "john@gmail?com"
-    });
+app.use(cors());
+app.use(express.json());
 
-    user.save()
+app.use("/api/users", userRoutes);
+
+
+mongoose.connect(process.env.MONGO_URI, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
 })
-.catch((err) => 
-    console.log(err)
-);
+.then(() => {
+    console.log("MongoDB connected successfully");
+}).catch((e) => {
+    console.error("MongoDB connection error:", e.message);
+})
 
-
+app.listen(PORT, () => console.log(`User service running on port ${PORT}`));
