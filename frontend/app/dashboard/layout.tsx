@@ -52,13 +52,11 @@ export default function DashboardLayout({
   
     // Handle logout logic here
     const handleLogout = () => {
-      // Assuming you're using a global state or context to manage auth state,
-      // clear it here, and then navigate to the login page or home page.
-      // Example for clearing auth state:
-      // clearAuthState();
-      
-      // Navigate to the login page (or home page).
-      router.push('/login');  // Adjust the route as needed
+  
+      // Clear any authentication tokens or user data
+      localStorage.removeItem('token'); // Example: remove token from local storage
+      // Redirect to the login page
+      router.push('/login'); 
       toast({
         title: 'Success',
         description: 'Successfully logged out!',

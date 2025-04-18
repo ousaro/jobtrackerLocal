@@ -9,27 +9,37 @@ import { Label } from '../../../components/ui/label';
 import { Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '../../../hooks/use-toast';
+import { register } from '../../../api/authApi/authApi';
 
 export default function SignUpPage() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: Implement signup logic
-    if(password !== confirmPassword) {
-      toast({
-        title: 'Error',
-        description: 'Passwords do not match',
-      });
-    }else{
-      router.push('/login');
+    setIsLoading(true);
+    try {
+          await register(name, email, password, confirmPassword, phoneNumber);
+          toast({
+            title: 'Success',
+            description: 'Successfully registered !',
+          });
+          router.push('/login');
+    } catch (error : any) {
+          toast({
+            title: 'Error',
+            description: error.message,
+            variant: 'destructive',
+          });
+    } finally {
+          setIsLoading(false);
     }
-   
   };
 
   return (
@@ -68,6 +78,16 @@ export default function SignUpPage() {
             />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="phoneNumber">Phone Number</Label>
+            <Input
+              id="phoneNumber"
+              type="text"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              required
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
             <Input
               id="password"
@@ -87,6 +107,7 @@ export default function SignUpPage() {
               required
             />
           </div>
+          
           <Button type="submit" className="w-full">
             Create Account
           </Button>

@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   meilisearch:
     image: getmeili/meilisearch:v1.7
@@ -6,9 +7,15 @@ services:
       - "7700:7700"
     environment:
       - MEILI_MASTER_KEY=masterKey
+    volumes:
+      - meili_data:/meili_data  # Persistent volume
 
   rabbitmq:
     image: rabbitmq:3-management
     ports:
       - "5672:5672"
       - "15672:15672" # Management UI
+
+volumes:
+  meili_data:  # Define the named volume
+    driver: local

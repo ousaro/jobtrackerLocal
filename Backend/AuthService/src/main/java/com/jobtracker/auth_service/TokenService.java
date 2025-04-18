@@ -25,7 +25,7 @@ public class TokenService {
             .setSubject(username)
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-            .claim("roles", "ROLE_USER") // Example claim, you can add more claims as needed
+            .claim("roles", "ROLE_USER")
             .signWith(privateKey, SignatureAlgorithm.RS256)
             .compact();
     }

@@ -8,7 +8,7 @@ import { Card } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
 import { Briefcase } from 'lucide-react';
 import Link from 'next/link';
-import { login } from '../../lib/auth';
+import { login } from "./../../../api/authApi/authApi";
 import { useToast } from '../../../hooks/use-toast';
 
 export default function LoginPage() {
@@ -28,6 +28,7 @@ export default function LoginPage() {
         title: 'Success',
         description: 'Successfully logged in!',
       });
+      // create the user
       router.push('/dashboard');
     } catch (error) {
       toast({

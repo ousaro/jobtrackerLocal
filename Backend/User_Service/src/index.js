@@ -5,7 +5,7 @@ const authMiddleware = require("./Middlewares/authMiddleware");
 require("dotenv").config();
 
 // Load environment variables from .env file
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 5001;
 
 // Routers
 const userRoutes = require("./Routes/userRoutes");
