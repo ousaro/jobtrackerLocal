@@ -2,8 +2,8 @@ resource "docker_image" "mongo" {
     name = "mongo:6"
 }
 
-resource "docker_volume" "mongo_data"  {
-    name = "mongo_data"
+resource "docker_volume" "mongo_data_user"  {
+    name = "mongo-data-user"
 }
 
 resource "docker_container" "mongo_user" {
@@ -21,7 +21,7 @@ resource "docker_container" "mongo_user" {
     }
 
     networks_advanced {
-        name = var.network_name
+        name = var.network_id
     }
 
     env = [

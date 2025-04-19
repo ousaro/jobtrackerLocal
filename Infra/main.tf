@@ -10,5 +10,16 @@ module "mongo-user" {
     mongo_database = var.mongo_database
     mongo_uri = var.mongo_uri
 
-    network_name = module.network.network_name
+    network_id = module.network.id
+}
+
+module "user-service" {
+    source = "./Modules/user-service"
+
+    mongo_root_username = var.mongo_root_username
+    mongo_root_password = var.mongo_root_password
+    mongo_database = var.mongo_database
+    mongo_uri = var.mongo_uri
+
+    network_id = module.network.id
 }

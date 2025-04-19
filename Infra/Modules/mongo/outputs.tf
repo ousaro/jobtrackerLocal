@@ -1,5 +1,5 @@
 output "mongo_status" {
-  value = "MongoDB container '${docker_container.mongo_user.name}' is running with ID '${docker_container.mongo_user.id}'"
+  value = "MongoDB container is '${docker_container.mongo_user.status}' with ID '${docker_container.mongo_user.id}'"
   description = "Status of the MongoDB container"
 }
 

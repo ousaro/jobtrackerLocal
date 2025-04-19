@@ -17,12 +17,12 @@ variable "mongo_database" {
 variable "mongo_uri" {
   description = "MongoDB connection URI"
   type        = string
-  default     = "mongodb://localhost:27018/user-service"
+  default     = "mongodb://mongo:27018/User-Service"
   sensitive   = true
   
 }
 
-variable "network_name" {
-  description = "The name of the Docker network to connect to"
+variable "network_id" {
+  description = "The ID of the Docker network to connect to"
   type        = string
 }
