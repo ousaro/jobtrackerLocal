@@ -16,15 +16,16 @@ resource "docker_container" "mongo_user" {
     }
 
     volumes {
-        volume_name = docker_volume.mongo_data.name
+        volume_name = docker_volume.mongo_data_user.name
         container_path = "/data/db"
     }
 
     networks_advanced {
-        name = var.network_id
+        name = var.network_name
     }
 
     env = [
+        "MONGO_URI=${local.mongo_uri}",
         "MONGO_INITDB_ROOT_USERNAME=${var.mongo_root_username}",
         "MONGO_INITDB_ROOT_PASSWORD=${var.mongo_root_password}",
         "MONGO_INITDB_DATABASE=${var.mongo_database}"

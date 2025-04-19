@@ -14,15 +14,11 @@ variable "mongo_database" {
   type        = string
 }
 
-variable "mongo_uri" {
-  description = "MongoDB connection URI"
-  type        = string
-  default     = "mongodb://mongo:27018/User-Service"
-  sensitive   = true
-  
+locals {
+  mongo_uri = "mongodb://${var.mongo_root_username}:${var.mongo_root_password}@mongo-user:27017/${var.mongo_database}"
 }
 
-variable "network_id" {
+variable "network_name" {
   description = "The ID of the Docker network to connect to"
   type        = string
 }

@@ -1,1 +1,1 @@
-{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"mongo-user","Source":"./Modules/mongo","Dir":"Modules/mongo"},{"Key":"network","Source":"./Modules/network","Dir":"Modules/network"}]}
+{"Modules":[{"Key":"","Source":"","Dir":"."},{"Key":"mongo-user","Source":"./Modules/mongo","Dir":"Modules/mongo"},{"Key":"network","Source":"./Modules/network","Dir":"Modules/network"},{"Key":"postgres-auth","Source":"./Modules/postgres","Dir":"Modules/postgres"},{"Key":"user-service","Source":"./Modules/user-service","Dir":"Modules/user-service"}]}
