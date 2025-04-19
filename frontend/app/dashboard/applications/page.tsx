@@ -30,7 +30,7 @@ import {
 import { Input } from '../../../components/ui/input';
 import { Badge } from '../../../components/ui/badge';
 import { Plus, Search } from 'lucide-react';
-import { Job, JobStatus, JobLocation } from '../../types';
+import { Job, JobStatus, JobLocation, JobFormData } from '../../types';
 import { Label } from '../../../components/ui/label';
 import { useToast } from '../../../hooks/use-toast';
 
@@ -89,26 +89,26 @@ const locationLabels: Record<JobLocation, string> = {
   HYBRID: 'Hybrid',
 };
 
-const initialJob: Partial<Job> = {
+const initialJob: Partial<JobFormData> = {
   companyName: '',
-    positionTitle: '',
-    location: 'REMOTE',
-    salaryExpectation: undefined,
-    jobDescriptionLink: '',
-    status: 'SAVED',
+  positionTitle: '',
+  location: 'REMOTE',
+  salaryExpectation: undefined,
+  jobDescriptionLink: '',
+  status: 'SAVED',
 }
 
 export default function ApplicationsPage() {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'ALL'>('ALL');
-  const [jobs, setJobs] = useState(mockJobs);
-  const [newJob, setNewJob] = useState<Partial<Job>>(initialJob);
-  const [editedJob, setEditedJob] = useState<Partial<Job>>(initialJob);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>(mockJobs);
+  const [newJob, setNewJob] = useState<Partial<JobFormData>>(initialJob);
+  const [editedJob, setEditedJob] = useState<Partial<JobFormData>>(initialJob);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
+  const [isStatusDialogOpen, setIsStatusDialogOpen] = useState<boolean>(false);
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =

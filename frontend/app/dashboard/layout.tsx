@@ -21,6 +21,8 @@ import { Button } from '../../components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '../../components/ui/sheet';
 import { cn } from '../../lib/utils';
 import { useToast } from '../../hooks/use-toast';
+import { withAuth } from '../../components/withAuth';
+import { useAuth } from '../../context/AuthContext';
 
 interface NavItem {
   title: string;
@@ -39,7 +41,7 @@ const navItems: NavItem[] = [
   { title: 'Settings', href: '/dashboard/settings', icon: Settings },
 ];
 
-export default function DashboardLayout({
+function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -47,21 +49,16 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  const router = useRouter();
   const {toast} = useToast();
+  const {user, logout} = useAuth();
   
-    // Handle logout logic here
-    const handleLogout = () => {
-  
-      // Clear any authentication tokens or user data
-      localStorage.removeItem('token'); // Example: remove token from local storage
-      // Redirect to the login page
-      router.push('/login'); 
-      toast({
-        title: 'Success',
-        description: 'Successfully logged out!',
-      });
-    };
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: 'Success',
+      description: 'Successfully logged out!',
+    });
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -110,11 +107,11 @@ export default function DashboardLayout({
           <div className="ml-auto flex items-center space-x-4">
             <ThemeToggle />
             <Button variant="ghost" size="icon" asChild>
-              <Link href="/dashboard/profiles/1"> {/* TODO: Replace with actual user ID */}
+              <Link href={user ? `/dashboard/profiles/${user.id}` : '/dashboard'}>
                 <User className="h-5 w-5" />
               </Link>
             </Button>
-            <Button variant="ghost" size="icon" asChild onClick={handleLogout}>
+            <Button variant="ghost" size="icon" onClick={handleLogout}>
               <span>
                 <LogOut className="h-5 w-5" />
               </span>
@@ -152,3 +149,5 @@ export default function DashboardLayout({
     </div>
   );
 }
+
+export default withAuth(DashboardLayout);

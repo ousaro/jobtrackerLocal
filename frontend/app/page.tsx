@@ -5,8 +5,9 @@ import { Card } from '../components/ui/card';
 import { ThemeToggle } from '../components/theme-toggle';
 import { Briefcase } from 'lucide-react';
 import Link from 'next/link';
+import { withGuest } from '../components/withAuth';
 
-export default function Home() {
+function Home() {
   return (
     <div className="min-h-screen bg-background">
       <nav className="border-b">
@@ -64,3 +65,5 @@ export default function Home() {
     </div>
   );
 }
+
+export default withGuest(Home);

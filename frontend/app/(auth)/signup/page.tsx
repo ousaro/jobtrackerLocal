@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Card } from '../../../components/ui/card';
@@ -9,28 +8,71 @@ import { Label } from '../../../components/ui/label';
 import { Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '../../../hooks/use-toast';
-import { register } from '../../../api/authApi/authApi';
+import { register, rollback } from '../../../api/authApi/authApi';
+import { withGuest } from '../../../components/withAuth';
+import { addProfile } from '../../../api/userApi/userApi';
+import { useAuth } from '../../../context/AuthContext';
+import { AuthResponse, RegisterRequest } from '../../types';
 
-export default function SignUpPage() {
-  const [name, setName] = useState('');
+function SignUpPage() {
+  const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
+  const { login, logout } = useAuth();
+
+  const createUser = async (response: AuthResponse) : Promise<{success: boolean, userData?: any}> => {
+    try {
+      const user = {
+        fullName: response.user?.fullName,
+        email: response.user?.email,
+        phone: response.user?.phone,
+      }
+
+      const userData = await addProfile(user);
+      toast({
+        title: 'Success',
+        description: "User added successfully !", 
+        variant: 'default',
+      });
+      return { success: true, userData };
+    }catch(error:any){
+      toast({
+        title: 'Error',
+        description: error.message,
+        variant: 'destructive',
+      });
+      return { success: false };
+    }
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
-          await register(name, email, password, confirmPassword, phoneNumber);
+          const request : RegisterRequest = {fullName, email, password, confirmPassword, phoneNumber}
+          const response = await register(request);
           toast({
             title: 'Success',
             description: 'Successfully registered !',
           });
-          router.push('/login');
+
+          const { success, userData } = await createUser(response);
+          if(success && userData){
+            login(response.token, {
+              id: userData.id,
+              fullName: userData.fullName,
+              email: userData.email,
+              phone: userData.phone
+            });
+          }else{
+            await rollback();
+            logout();
+          }
+          
     } catch (error : any) {
           toast({
             title: 'Error',
@@ -57,12 +99,12 @@ export default function SignUpPage() {
         </div>
         <form onSubmit={handleSubmit} className="space-y-4 mt-6">
           <div className="space-y-2">
-            <Label htmlFor="name">Name</Label>
+            <Label htmlFor="fullName">Full Name</Label>
             <Input
-              id="name"
+              id="fullName"
               placeholder="John Doe"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
               required
             />
           </div>
@@ -122,3 +164,5 @@ export default function SignUpPage() {
     </div>
   );
 }
+
+export default withGuest(SignUpPage);

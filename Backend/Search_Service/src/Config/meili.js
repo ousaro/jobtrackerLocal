@@ -6,8 +6,6 @@ const meili = new MeiliSearch({
   apiKey: process.env.MEILI_KEY
 });
 
-
-
 /**
  * Get a specific index (e.g., 'users', 'contacts', 'applications')
  */
@@ -23,9 +21,22 @@ const deleteIndex = async (indexName) => {
   }
 };
 
+const deleteDocument = async (indexName, documentId) => {
+  try {
+    const index = getIndex(indexName);
+    await index.deleteDocument(documentId);
+    console.log(`[✅] Deleted document ${documentId} from index: ${indexName}`);
+  } catch (error) {
+    console.error(`[❌] Error deleting document ${documentId} from index ${indexName}:`, error.message);
+  }
+};
+
+//deleteIndex("users")
+
 
 module.exports = {
   meili,
   getIndex,
   deleteIndex,
+  deleteDocument,
 };

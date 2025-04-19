@@ -1,39 +1,55 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '../../../components/ui/button';
 import { Input } from '../../../components/ui/input';
 import { Card } from '../../../components/ui/card';
 import { Label } from '../../../components/ui/label';
 import { Briefcase } from 'lucide-react';
 import Link from 'next/link';
-import { login } from "./../../../api/authApi/authApi";
+import { login as loginApi } from "./../../../api/authApi/authApi";
 import { useToast } from '../../../hooks/use-toast';
+import { withGuest } from '../../../components/withAuth';
+import { useAuth } from '../../../context/AuthContext';
+import { getProfileByEmail } from '../../../api/userApi/userApi';
+import { getTokenClaims } from '../../../utils/tokenService';
+import { LoginRequest } from '../../types';
 
-export default function LoginPage() {
+function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
   const { toast } = useToast();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
-      await login(email, password);
+      const request : LoginRequest = {email, password};
+      const response = await loginApi(request);
+      
+      // Get user profile data
+      const {sub : userEmail} = getTokenClaims();
+      const userProfile = await getProfileByEmail(userEmail);
+      
+      // Login with the auth context
+      login(response.token, {
+        id: userProfile._id,
+        fullName: userProfile.fullName,
+        email: userProfile.email,
+        phone: userProfile.phone
+      });
+
       toast({
         title: 'Success',
         description: 'Successfully logged in!',
       });
-      // create the user
-      router.push('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: 'Error',
-        description: 'Invalid credentials. Please try again.',
+        description: error.message || 'Invalid credentials. Please try again.',
         variant: 'destructive',
       });
     } finally {
@@ -90,3 +106,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
+export default withGuest(LoginPage);

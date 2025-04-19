@@ -26,7 +26,7 @@ import { Label } from '../../../components/ui/label';
 import { Textarea } from '../../../components/ui/textarea';
 import { Badge } from '../../../components/ui/badge';
 import { Plus,ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { Interview, InterviewType } from '../../types';
+import { Interview, InterviewType, InterviewFormData } from '../../types';
 import { useToast } from '../../../hooks/use-toast';
 
 const mockInterviews: Interview[] = [
@@ -64,7 +64,7 @@ const interviewTypeColors: Record<InterviewType, string> = {
   PHONE: 'bg-yellow-500',
 };
 
-const initialNewInterview: Partial<Interview> = {
+const initialNewInterview: Partial<InterviewFormData> = {
   companyName: '',
   positionTitle: '',
   type: 'ONLINE',
@@ -76,9 +76,9 @@ export default function InterviewsPage() {
   const { toast } = useToast();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [typeFilter, setTypeFilter] = useState<InterviewType | 'ALL'>('ALL');
-  const [interviews, setInterviews] = useState(mockInterviews);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newInterview, setNewInterview] = useState<Partial<Interview>>(initialNewInterview);
+  const [interviews, setInterviews] = useState<Interview[]>(mockInterviews);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
+  const [newInterview, setNewInterview] = useState<Partial<InterviewFormData>>(initialNewInterview);
 
   const filteredInterviews = interviews.filter((interview) => {
     const matchesType = typeFilter === 'ALL' || interview.type === typeFilter;

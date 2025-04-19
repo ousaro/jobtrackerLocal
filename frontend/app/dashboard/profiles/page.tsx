@@ -1,67 +1,50 @@
 'use client';
 
 import Link from 'next/link';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import debounce from 'lodash.debounce'; 
 import { Card } from '../../../components/ui/card';
 import { Input } from '../../../components/ui/input';
 import { Search } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
+import { UserProfile } from '../../types';
+import { useToast } from '../../../hooks/use-toast';
+import { getProfiles, getProfilesByIds } from '../../../api/userApi/userApi';
+import { searchByType } from '../../../api/searchApi/searchApi';
 
 export default function ProfilesPage() {
-  const [profiles, setProfiles] = useState([
-    {
-        id:'1',
-        name: 'John Doe',
-        email: 'john@example.com',
-        phone: '+1 (555) 123-4567',
-        location: 'San Francisco, CA',
-        title: 'Senior Frontend Developer',
-        bio: 'Passionate developer with 5 years of experience.',
-        linkedin: 'linkedin.com/in/johndoe',
-        github: 'github.com/johndoe',
-        portfolio: 'johndoe.dev',
-        resume: null as File | null,
-        skills: 'JavaScript, TypeScript, React, Node.js, Next.js, GraphQL, AWS',
-        avatar: 'https://ui-avatars.com/api/?background=random',
-    },
-    {
-        id: "2",
-        name: 'Jane Smith',
-        email: 'john@example.com',
-        phone: '+1 (555) 123-4567',
-        location: 'San Francisco, CA',
-        title: 'Senior Frontend Developer',
-        bio: 'Passionate developer with 5 years of experience.',
-        linkedin: 'linkedin.com/in/johndoe',
-        github: 'github.com/johndoe',
-        portfolio: 'johndoe.dev',
-        resume: null as File | null,
-        skills: 'JavaScript, TypeScript, React, Node.js, Next.js, GraphQL, AWS',
-        avatar: 'https://ui-avatars.com/api/?background=random',
-    },
-    {
-      id: "3",
-      name: 'Jake Wlliams',
-      email: 'john@example.com',
-      phone: '+1 (555) 123-4567',
-      location: 'San Francisco, CA',
-      title: 'Senior Frontend Developer',
-      bio: 'Passionate developer with 5 years of experience.',
-      linkedin: 'linkedin.com/in/johndoe',
-      github: 'github.com/johndoe',
-      portfolio: 'johndoe.dev',
-      resume: null as File | null,
-      skills: 'JavaScript, TypeScript, React, Node.js, Next.js, GraphQL, AWS',
-      avatar: 'https://ui-avatars.com/api/?background=random',
-    },
-    // Add more dummy profiles
-  ]);
-
+  const [profiles, setProfiles] = useState<UserProfile[]>([]);
   const [search, setSearch] = useState('');
+  const { toast } = useToast();
 
-  const filteredProfiles = profiles.filter((profile) =>
-    profile.name.toLowerCase().includes(search.toLowerCase())
-  );
+  const fetchSearchResults = async (q: string) => {
+    try {
+      const res = await searchByType('users', q);
+      const ids = res.results.map(result => result.id);
+      const result = await getProfilesByIds(ids)
+      setProfiles(result);
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.message || 'Error fetching search results.',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const debouncedSearch = debounce((query: string) => {
+    fetchSearchResults(query);
+  }, 300);
+
+  useEffect(() => {
+    debouncedSearch(search);
+    return () => debouncedSearch.cancel();
+  }, [search]);
+
+  // Optional: fetch top profiles on initial load
+  useEffect(() => {
+    fetchSearchResults('');
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -84,19 +67,19 @@ export default function ProfilesPage() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {filteredProfiles.map((profile) => (
-          <Card key={profile.id} className="p-6 flex items-center gap-4 cursor-pointer hover:shadow-lg transition">
+        {profiles.map((profile) => (
+          <Card key={profile._id} className="p-6 flex items-center gap-4 cursor-pointer hover:shadow-lg transition">
             <img
-              src={profile.avatar}
-              alt={profile.name}
+              src={profile.avatar || "https://www.gravatar.com/avatar"}
+              alt={profile.fullName}
               className="w-12 h-12 rounded-full object-cover"
             />
             <div className="flex-1">
-              <h2 className="text-lg font-semibold">{profile.name}</h2>
+              <h2 className="text-lg font-semibold">{profile.fullName}</h2>
               <p className="text-sm text-gray-500">{profile.title}</p>
               <p className="text-sm text-gray-400">{profile.location}</p>
             </div>
-            <Link href={`/dashboard/profiles/${profile.id}`}>
+            <Link href={`/dashboard/profiles/${profile._id}`}>
               <Button variant="outline">View</Button>
             </Link>
           </Card>

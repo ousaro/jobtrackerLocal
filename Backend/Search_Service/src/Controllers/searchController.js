@@ -57,8 +57,24 @@ const reindexAll =  async (req, res) => {
   }
 }
 
+const deleteDocument = async (req, res) => {
+  const { type, id } = req.params;
+  
+  try {
+    const index = getIndex(type);
+    await index.deleteDocument(id);
+    
+    console.log(`[✅] Successfully deleted document ${id} from ${type} index`);
+    res.json({ message: `Document ${id} deleted successfully from ${type} index` });
+  } catch (err) {
+    console.error(`[❌] Error deleting document ${id} from ${type} index:`, err.message);
+    res.status(500).json({ error: 'Failed to delete document' });
+  }
+}
+
 
 module.exports = {
     searchByType,
-    reindexAll
+    reindexAll,
+    deleteDocument
 }

@@ -12,6 +12,7 @@ public class AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+
     public RegisterResponse register(RegisterRequest request) {
         // Check if user already exists
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -31,7 +32,8 @@ public class AuthService {
         RegisterResponse registerResponse = new RegisterResponse();
         registerResponse.setEmail(user.getEmail());
         registerResponse.setFullName(user.getFullName());
-        registerResponse.setPhoneNumber(request.getPhoneNumber()); // Optional
+        registerResponse.setPhoneNumber(request.getPhoneNumber());
+        registerResponse.setToken(tokenService.generateToken(user.getEmail()));
 
         return registerResponse;
     }
@@ -54,6 +56,17 @@ public class AuthService {
         loginResponse.setToken(token);
 
         return loginResponse;
+    }
+
+    public String rollback() {
+        // Get the last user added
+        User lastUser = userRepository.findTopByOrderByIdDesc()
+                .orElseThrow(() -> new RuntimeException("No users found to rollback"));
+        
+        // Delete the user
+        userRepository.delete(lastUser);
+        
+        return "Success";
     }
 
     

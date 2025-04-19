@@ -13,8 +13,9 @@ import {
   Pie,
   Cell,
 } from 'recharts';
+import { AnalyticsData } from '../../types';
 
-const applicationData = [
+const applicationData: AnalyticsData['applicationsOverTime'] = [
   { month: 'Jan', applications: 8 },
   { month: 'Feb', applications: 12 },
   { month: 'Mar', applications: 15 },
@@ -23,21 +24,21 @@ const applicationData = [
   { month: 'Jun', applications: 14 },
 ];
 
-const statusData = [
+const statusData: AnalyticsData['applicationStatus'] = [
   { name: 'Applied', value: 24, color: 'hsl(var(--chart-1))' },
   { name: 'Interview', value: 12, color: 'hsl(var(--chart-2))' },
   { name: 'Offer', value: 2, color: 'hsl(var(--chart-3))' },
   { name: 'Rejected', value: 10, color: 'hsl(var(--chart-4))' },
 ];
 
-const sourceData = [
+const sourceData: AnalyticsData['applicationSource'] = [
   { name: 'LinkedIn', value: 20, color: 'hsl(var(--chart-1))' },
   { name: 'Indeed', value: 15, color: 'hsl(var(--chart-2))' },
   { name: 'Company Website', value: 10, color: 'hsl(var(--chart-3))' },
   { name: 'Referral', value: 5, color: 'hsl(var(--chart-4))' },
 ];
 
-const responseTimeData = [
+const responseTimeData: AnalyticsData['responseTime'] = [
   { name: '1-3 days', value: 15, color: 'hsl(var(--chart-1))' },
   { name: '4-7 days', value: 25, color: 'hsl(var(--chart-2))' },
   { name: '1-2 weeks', value: 10, color: 'hsl(var(--chart-3))' },

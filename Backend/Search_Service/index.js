@@ -1,4 +1,5 @@
 const express = require('express');
+const cors = require('cors')
 const startConsumer = require('./src/Config/consumer');
 const authMiddleware = require('./src/Middlewares/authMiddleware');
 require('dotenv').config();
@@ -14,6 +15,12 @@ const searchRoutes = require('./src/routers/searchRoutes');
 const app = express();
 
 // Middlewares
+// Allow requests from frontend
+app.use(cors({
+  origin: 'http://localhost:3000', // or '*' for all origins (not recommended for production)
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true // if you're using cookies/auth headers
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 

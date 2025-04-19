@@ -20,12 +20,11 @@ public class TokenService {
     private RSAPrivateKey privateKey;
 
 
-    public String generateToken(String username) {
+    public String generateToken(String email) {
         return Jwts.builder()
-            .setSubject(username)
+            .setSubject(email)
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
-            .claim("roles", "ROLE_USER")
             .signWith(privateKey, SignatureAlgorithm.RS256)
             .compact();
     }

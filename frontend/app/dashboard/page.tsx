@@ -1,3 +1,5 @@
+'use client';
+
 import { Card } from '../../components/ui/card';
 import {
   Briefcase,
@@ -6,14 +8,27 @@ import {
   XCircle,
   Clock,
 } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { DashboardStats } from '../types';
+import { useState } from 'react';
+
+const mockStats: DashboardStats = {
+  totalApplications: 24,
+  inProgress: 12,
+  offers: 2,
+  rejected: 10,
+};
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const [stats] = useState<DashboardStats>(mockStats);
+
   return (
     <div className="space-y-8">
       <div>
         <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
         <p className="text-muted-foreground">
-          Welcome back! Here&apos;s an overview of your job search progress.
+          Welcome back {user?.fullName} ! Here&apos;s an overview of your job search progress.
         </p>
       </div>
 
@@ -23,28 +38,28 @@ export default function DashboardPage() {
             <Briefcase className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-medium">Total Applications</h3>
           </div>
-          <p className="text-2xl font-bold">24</p>
+          <p className="text-2xl font-bold">{stats.totalApplications}</p>
         </Card>
         <Card className="p-6">
           <div className="flex items-center space-x-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-medium">In Progress</h3>
           </div>
-          <p className="text-2xl font-bold">12</p>
+          <p className="text-2xl font-bold">{stats.inProgress}</p>
         </Card>
         <Card className="p-6">
           <div className="flex items-center space-x-2">
             <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-medium">Offers</h3>
           </div>
-          <p className="text-2xl font-bold">2</p>
+          <p className="text-2xl font-bold">{stats.offers}</p>
         </Card>
         <Card className="p-6">
           <div className="flex items-center space-x-2">
             <XCircle className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-medium">Rejected</h3>
           </div>
-          <p className="text-2xl font-bold">10</p>
+          <p className="text-2xl font-bold">{stats.rejected}</p>
         </Card>
       </div>
 
