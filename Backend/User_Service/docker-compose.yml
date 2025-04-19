@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo:6
+    container_name: mongo-user
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: oumeri
+      MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
+      MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo-user:27017/User-Service
+    volumes:
+      - mongo_data:/data/db
+    networks:
+      - app-network
+
+  user-service:
+    image: mezlin/user-service:latest
+    container_name: user-service
+    ports:
+      - "5001:5001"
+    environment:
+      MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo-user:27017/User-Service?authSource=admin
+    depends_on:
+      - mongo
+    networks:
+      - app-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"   # AMQP
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - app-network
+
+  auth-service:
+      image: mezlin/auth-service:latest
+      container_name: auth-service
+      ports:
+        - "8080:8080"
+      depends_on:
+        - rabbitmq
+      environment:
+        RABBITMQ_URL: amqp://rabbitmq:5672
+      networks:
+        - app-network
+
+networks:
+  app-network:
+    driver: bridge
+
+volumes:
+  mongo_data:
+    driver: local

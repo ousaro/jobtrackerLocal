@@ -7,8 +7,8 @@ resource "docker_container" "user_service" {
     image = docker_image.user_service.name
 
     ports {
-        internal = 3000
-        external = 3000
+        internal = 5001
+        external = 5001
     }
 
     networks_advanced {

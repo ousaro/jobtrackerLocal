@@ -15,7 +15,7 @@ variable "mongo_database" {
 }
 
 locals {
-  mongo_uri = "mongodb://${var.mongo_root_username}:${var.mongo_root_password}@mongo-user:27017/${var.mongo_database}"
+  mongo_uri = "mongodb://${var.mongo_root_username}:${var.mongo_root_password}@mongo-user:27017/${var.mongo_database}?authSource=admin"
 }
 
 variable "network_name" {
