@@ -1,0 +1,13 @@
+com\jobtracker\auth_service\LoginResponse.class
+com\jobtracker\auth_service\TokenService.class
+com\jobtracker\auth_service\configurations\SecurityConfig.class
+com\jobtracker\auth_service\UserRepository.class
+com\jobtracker\auth_service\User$UserBuilder.class
+com\jobtracker\auth_service\LoginRequest.class
+com\jobtracker\auth_service\RegisterResponse.class
+com\jobtracker\auth_service\RegisterRequest.class
+com\jobtracker\auth_service\User.class
+com\jobtracker\auth_service\configurations\AppConfig.class
+com\jobtracker\auth_service\AuthController.class
+com\jobtracker\auth_service\AuthService.class
+com\jobtracker\auth_service\JobtrackerApplication.class
