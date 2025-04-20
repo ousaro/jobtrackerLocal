@@ -66,8 +66,9 @@ You can manage the database via [Adminer](http://localhost:5050):
 
 ## 📁 Folder Structure
 
+```plaintext
 AuthService/
-├── src/main/java/com/example/authservice/    # Main application code
+├── src/main/java/com/example/authservice/   # Main application code
 │   ├── config/                              # Configuration classes (e.g., SecurityConfig, JWTConfig)
 │   ├── controller/                          # Controllers for Auth API (e.g., AuthController)
 │   ├── service/                             # Business logic for auth operations (e.g., AuthService)
@@ -77,12 +78,12 @@ AuthService/
 │   └── util/                                # Utility classes (e.g., JWT utility, password hashing)
 ├── src/main/resources/
 │   ├── application.properties               # Application configuration (e.g., DB connection, JWT secret)
+│   ├── private.key                         # Contains private JWT key for signing tokens
+│   ├── public.key                          # Contains public JWT key for verifying tokens
 │   └── static/                              # Static files (if needed)
 ├── Dockerfile
-├── docker-compose.yml                                
+├── docker-compose.yml
 └── README.md
-
-
 ---
 
 ## 🔐 Environment Variables
