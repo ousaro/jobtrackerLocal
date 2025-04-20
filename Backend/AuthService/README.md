@@ -78,8 +78,8 @@ AuthService/
 │   └── util/                                # Utility classes (e.g., JWT utility, password hashing)
 ├── src/main/resources/
 │   ├── application.properties               # Application configuration (e.g., DB connection, JWT secret)
-│   ├── private.key                         # Contains private JWT key for signing tokens
-│   ├── public.key                          # Contains public JWT key for verifying tokens
+│   ├── private.pem                         # Contains private JWT key for signing tokens
+│   ├── public.pem                          # Contains public JWT key for verifying tokens
 │   └── static/                              # Static files (if needed)
 ├── Dockerfile
 ├── docker-compose.yml
