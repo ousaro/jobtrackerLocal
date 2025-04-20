@@ -84,6 +84,7 @@ AuthService/
 ├── Dockerfile
 ├── docker-compose.yml
 └── README.md
+```
 ---
 
 ## 🔐 Environment Variables
