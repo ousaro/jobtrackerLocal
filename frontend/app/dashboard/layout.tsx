@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { ThemeToggle } from '../../components/theme-toggle';
 import {
   Briefcase,
@@ -30,17 +30,6 @@ interface NavItem {
   icon: React.ComponentType<{ className?: string }>;
 }
 
-const navItems: NavItem[] = [
-  { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
-  {title: 'Profiles', href: '/dashboard/profiles', icon: Users},
-  { title: 'Applications', href: '/dashboard/applications', icon: FileText },
-  { title: 'Interviews', href: '/dashboard/interviews', icon: CalendarDays },
-  { title: 'Contacts', href: '/dashboard/contacts', icon: BookUser },
-  { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart },
-  { title: 'Profile', href: '/dashboard/profiles/1', icon: User }, // TODO: Replace with actual user ID
-  { title: 'Settings', href: '/dashboard/settings', icon: Settings },
-];
-
 function DashboardLayout({
   children,
 }: {
@@ -50,7 +39,7 @@ function DashboardLayout({
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const {toast} = useToast();
-  const {user, logout} = useAuth();
+  const {user,isLoading, logout} = useAuth();
   
   const handleLogout = () => {
     logout();
@@ -59,6 +48,38 @@ function DashboardLayout({
       description: 'Successfully logged out!',
     });
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-background">
+        <div className="loader"></div>
+        <style jsx>{`
+          .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #3498db; /* Blue */
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 2s linear infinite;
+            `}</style>
+      </div>
+    );
+  }
+
+  if(!user) {
+    return null; // loading state or redirect to login
+  }
+
+  const navItems: NavItem[] = [
+    { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { title: 'Profiles', href: '/dashboard/profiles', icon: Users },
+    { title: 'Applications', href: '/dashboard/applications', icon: FileText },
+    { title: 'Interviews', href: '/dashboard/interviews', icon: CalendarDays },
+    { title: 'Contacts', href: '/dashboard/contacts', icon: BookUser },
+    { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart },
+    { title: 'Profile', href: `/dashboard/profiles/${user.id}`, icon: User },
+    { title: 'Settings', href: '/dashboard/settings', icon: Settings },
+  ];
 
   return (
     <div className="min-h-screen bg-background">
@@ -106,11 +127,13 @@ function DashboardLayout({
           </div>
           <div className="ml-auto flex items-center space-x-4">
             <ThemeToggle />
-            <Button variant="ghost" size="icon" asChild>
-              <Link href={user ? `/dashboard/profiles/${user.id}` : '/dashboard'}>
-                <User className="h-5 w-5" />
-              </Link>
-            </Button>
+            {user && (
+              <Button variant="ghost" size="icon" asChild>
+                <Link href={`/dashboard/profiles/${user.id}`}>
+                  <User className="h-5 w-5" />
+                </Link>
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={handleLogout}>
               <span>
                 <LogOut className="h-5 w-5" />

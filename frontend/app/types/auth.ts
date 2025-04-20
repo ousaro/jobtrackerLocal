@@ -9,13 +9,16 @@ export interface RegisterRequest {
   email: string;
   password: string;
   confirmPassword: string;
-  phoneNumber:string;
+  phone:string;
 }
 
 
 // Auth Response Types
 export interface AuthResponse {
-  user: User;
+  _id: string;
+  email: string;
+  fullName: string;
+  phone:string;
   token: string;
 }
 

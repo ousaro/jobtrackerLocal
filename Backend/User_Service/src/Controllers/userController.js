@@ -69,7 +69,7 @@ const getProfileWithEmail = async(req, res) => {
 }
 
 const addProfile = async(req, res) => {;
-    const {fullName, email, phone, location, skills, title, resume, profilePicture, bio, socialLinks} = req.body;
+    const {fullName, email, phone} = req.body;
     if (!fullName || !email || !phone) {
         return res.status(400).json({message: "Required fields missing"});
     }
@@ -77,14 +77,7 @@ const addProfile = async(req, res) => {;
         const user = new User({
             fullName,
             email,
-            phone,
-            location,
-            skills,
-            title,
-            resume,
-            profilePicture,
-            bio,
-            socialLinks
+            phone
         })
         await user.save();
         const data = {id: user._id, fullName};
@@ -111,11 +104,19 @@ const updateProfile = async(req, res) => {
             return res.status(404).json({message: "User not found"});
         }
 
-        const allowedFields = ['fullName', 'email', 'phone', 'location', 'skills', 'title', 'resume', 'profilePicture', 'bio', 'socialLinks'];
-        const updates = Object.keys(req.body).filter(key => allowedFields.includes(key));
+        const allowedFields = ['fullName', 'email', 'phone', 'location', 'skills', 'title', 'resume', 'avatar', 'bio', 'socialLinks'];
+        // Create update object
+        const updates = {};
+        allowedFields.forEach(field => {
+            if (field in req.body) {
+                updates[field] = req.body[field];
+            }
+        });
 
         const updatedUser = await User.findByIdAndUpdate(uid, {$set: updates}, {new: true});
-        res.json({message: "User profile updated successfully", user: updatedUser});
+        const data = {id: updatedUser._id, fullName: updatedUser.fullName};
+        publishToQueue(process.env.USER_QUEUE, data);
+        res.json(updatedUser);
     }
     catch(e) {
         console.error(e);

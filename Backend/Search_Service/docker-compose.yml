@@ -15,6 +15,7 @@ services:
     ports:
       - "5672:5672"
       - "15672:15672" # Management UI
+    hostname: rabbitmq
 
 volumes:
   meili_data:  # Define the named volume

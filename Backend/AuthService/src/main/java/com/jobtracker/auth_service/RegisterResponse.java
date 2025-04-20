@@ -9,6 +9,6 @@ public class RegisterResponse {
 
     private String email;
     private String fullName;
-    private String phoneNumber;
+    private String phone;
     private String token;
 }

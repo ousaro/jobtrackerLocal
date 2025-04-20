@@ -12,7 +12,7 @@ import { register, rollback } from '../../../api/authApi/authApi';
 import { withGuest } from '../../../components/withAuth';
 import { addProfile } from '../../../api/userApi/userApi';
 import { useAuth } from '../../../context/AuthContext';
-import { AuthResponse, RegisterRequest } from '../../types';
+import { AuthResponse, RegisterRequest, User } from '../../types';
 
 function SignUpPage() {
   const [fullName, setFullName] = useState('');
@@ -27,9 +27,9 @@ function SignUpPage() {
   const createUser = async (response: AuthResponse) : Promise<{success: boolean, userData?: any}> => {
     try {
       const user = {
-        fullName: response.user?.fullName,
-        email: response.user?.email,
-        phone: response.user?.phone,
+        fullName: response?.fullName,
+        email: response?.email,
+        phone: response?.phone,
       }
 
       const userData = await addProfile(user);
@@ -53,7 +53,7 @@ function SignUpPage() {
     e.preventDefault();
     setIsLoading(true);
     try {
-          const request : RegisterRequest = {fullName, email, password, confirmPassword, phoneNumber}
+          const request : RegisterRequest = {fullName, email, password, confirmPassword, phone: phoneNumber}
           const response = await register(request);
           toast({
             title: 'Success',

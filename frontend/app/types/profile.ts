@@ -5,14 +5,16 @@ export interface UserProfile {
   fullName: string;
   phone: string;
   title?:string;
-  resume?: File | null;
+  resume?: string;
   avatar?: string;
   bio?: string;
   location?: string;
-  portfolio?: string;
-  github?: string;
-  linkedIn?: string;
-  skill?: string;
+  website?: string;
+  socialLinks?: {
+    github?: string;
+    linkedIn?: string;
+  };
+  skills?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -26,14 +28,16 @@ export interface ProfileFormData {
     fullName: string;
     phone: string;
     title?:string;
-    resume?: File | null;
+    resume?: string;
     avatar?: string;
     bio?: string;
     location?: string;
-    portfolio?: string;
-    github?: string;
-    linkedIn?: string;
-    skill?: string;
+    website?: string;
+    socialLinks?: {
+        github?: string;
+        linkedIn?: string;
+    };
+    skills?: string;
 }
 
 export interface SettingsFormData {

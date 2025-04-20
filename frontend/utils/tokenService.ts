@@ -23,3 +23,7 @@ export const getTokenClaims = () => {
   if (!token) return null;
   return decodeToken(token);
 };
+
+export const getToken = () => {
+  return localStorage.getItem('token');
+};

@@ -2,6 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
+import { getToken, getTokenClaims } from '../utils/tokenService';
+import { getProfileByEmail } from '../api/userApi/userApi';
 
 interface User {
   id: string;
@@ -26,10 +28,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Check if user is authenticated on initial load
-    // You might want to verify the token with your backend here
-    setIsLoading(false);
+    const getAuthUser = async () => {
+      try {
+        const { sub: userEmail } = getTokenClaims();
+  
+        if (!userEmail) {
+          setIsLoading(false);
+          return;
+        }
+  
+        const userProfile = await getProfileByEmail(userEmail);
+  
+        setUser({
+          id: userProfile._id,
+          fullName: userProfile.fullName,
+          email: userProfile.email,
+          phone: userProfile.phone,
+        });
+  
+        console.log("User context setup");
+      } catch (error) {
+        console.error("Failed to fetch user profile:", error);
+        logout(); // force logout if token is bad
+      } finally {
+        setIsLoading(false);
+      }
+    };
+  
+    getAuthUser();
   }, []);
+  
 
   const login = (token: string, userData: User) => {
     localStorage.setItem('token', token);

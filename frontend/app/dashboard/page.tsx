@@ -10,7 +10,9 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { DashboardStats } from '../types';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { getTokenClaims } from '../../utils/tokenService';
+import { getProfileByEmail } from '../../api/userApi/userApi';
 
 const mockStats: DashboardStats = {
   totalApplications: 24,
@@ -22,6 +24,7 @@ const mockStats: DashboardStats = {
 export default function DashboardPage() {
   const { user } = useAuth();
   const [stats] = useState<DashboardStats>(mockStats);
+
 
   return (
     <div className="space-y-8">

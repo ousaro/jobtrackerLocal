@@ -12,7 +12,7 @@ export const login = async (request: LoginRequest): Promise<AuthResponse> => {
     try {
         const response = await authApi.post<AuthResponse>('/login', request);
         localStorage.setItem('token', response.data.token);
-        return {user:mockUser , token : response.data.token};
+        return {...mockUser , token : response.data.token};
     } catch (error) {
         const axiosError = error as AxiosError<{ message: string }>;
         throw new Error(axiosError.response?.data?.message || 'Login failed');
@@ -21,13 +21,13 @@ export const login = async (request: LoginRequest): Promise<AuthResponse> => {
 
 // Register function
 export const register = async (request: RegisterRequest): Promise<AuthResponse> => {
-    if (request.fullName === '' || request.email === '' || request.password === '' || request.confirmPassword === '' || request.phoneNumber === '') {
+    if (request.fullName === '' || request.email === '' || request.password === '' || request.confirmPassword === '' || request.phone === '') {
         throw new Error('All fields are required');
     }
     if (request.password !== request.confirmPassword) {
         throw new Error('Passwords do not match');
     }
-    if (request.phoneNumber.length !== 10) {
+    if (request.phone.length !== 10) {
         throw new Error('Phone number must be 10 digits long');
     }
 

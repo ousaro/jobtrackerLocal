@@ -57,7 +57,7 @@ export const addProfile = async (profile: ProfileFormData): Promise<UserProfile>
     }
 }
 
-export const updateProfile = async (uid: string, profile: UserProfile): Promise<UserProfile> => {
+export const updateProfile = async (uid: string, profile: ProfileFormData): Promise<UserProfile> => {
     try {
         const response = await userApi.put<UserProfile>(`/${uid}`, profile);
         return response.data;

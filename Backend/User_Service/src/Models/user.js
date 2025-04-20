@@ -4,22 +4,17 @@ const userSchema = new mongoose.Schema({
   fullName: { type: String, required: true },
   email: { type: String, unique: true, required: true },
   phone: { type: String, unique: true, required: true },
-  location: {
-    city: String,
-    state: String,
-    country: String
-  },
-  skills: [String],
+  location: String,
+  skills: String,
   title: String,
   resume: String,
-  profilePicture: String,
+  avatar: String,
   bio: String,
+  website: String,
   socialLinks: {
     github: String,
-    linkedin: String,
-    twitter: String
+    linkedin: String
   },
-  createdAt: { type: Date, default: Date.now }
-});
+}, { timestamps: true });
 
 module.exports = mongoose.model('User', userSchema);

@@ -32,7 +32,7 @@ public class AuthService {
         RegisterResponse registerResponse = new RegisterResponse();
         registerResponse.setEmail(user.getEmail());
         registerResponse.setFullName(user.getFullName());
-        registerResponse.setPhoneNumber(request.getPhoneNumber());
+        registerResponse.setPhone(request.getPhone());
         registerResponse.setToken(tokenService.generateToken(user.getEmail()));
 
         return registerResponse;
