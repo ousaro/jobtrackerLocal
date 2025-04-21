@@ -22,7 +22,7 @@ WORKDIR /app
 COPY --from=builder /app /app
 
 # Expose the desired port
-EXPOSE 5001
+EXPOSE 5000
 
 # Use exec form and specify the default command
 CMD ["npm", "start"]

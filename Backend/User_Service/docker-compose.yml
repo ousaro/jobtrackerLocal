@@ -9,50 +9,45 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: oumeri
       MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
-      MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo-user:27017/User-Service
     volumes:
       - mongo_data:/data/db
     networks:
-      - app-network
+      - shared-network
+
+  mongo-express:
+    image: mongo-express
+    container_name: mongo-express
+    restart: always
+    ports:
+      - "8081:8081" 
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: oumeri
+      ME_CONFIG_MONGODB_ADMINPASSWORD: PantryScanner2024 
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_SITE_ADMINUSERNAME: admin 
+      ME_CONFIG_SITE_ADMINPASSWORD: admin
+    depends_on:
+      - mongo
+    networks:
+      - shared-network
 
   user-service:
-    image: mezlin/user-service:latest
-    container_name: user-service
+    build: .
     ports:
       - "5001:5001"
     environment:
       MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo-user:27017/User-Service?authSource=admin
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      USER_QUEUE: user.index
+      PORT: 5001
     depends_on:
       - mongo
     networks:
-      - app-network
-
-  rabbitmq:
-    image: rabbitmq:3-management
-    ports:
-      - "5672:5672"   # AMQP
-      - "15672:15672" # Management UI
-    environment:
-      RABBITMQ_DEFAULT_USER: guest
-      RABBITMQ_DEFAULT_PASS: guest
-    networks:
-      - app-network
-
-  auth-service:
-      image: mezlin/auth-service:latest
-      container_name: auth-service
-      ports:
-        - "8080:8080"
-      depends_on:
-        - rabbitmq
-      environment:
-        RABBITMQ_URL: amqp://rabbitmq:5672
-      networks:
-        - app-network
+      - shared-network
 
 networks:
-  app-network:
-    driver: bridge
+  shared-network:
+    external: true
 
 volumes:
   mongo_data:
