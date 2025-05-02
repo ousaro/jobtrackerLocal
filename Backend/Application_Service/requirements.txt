@@ -1,0 +1,6 @@
+django
+djangorestframework
+mongoengine
+django-rest-framework-mongoengine
+
+#  python -m pip install -r .\requirements.txt
