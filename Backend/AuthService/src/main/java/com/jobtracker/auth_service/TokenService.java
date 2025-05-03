@@ -23,6 +23,7 @@ public class TokenService {
     public String generateToken(String email) {
         return Jwts.builder()
             .setSubject(email)
+            .setIssuer("JobTracker")
             .setIssuedAt(new Date(System.currentTimeMillis()))
             .setExpiration(new Date(System.currentTimeMillis() + jwtExpiration))
             .signWith(privateKey, SignatureAlgorithm.RS256)

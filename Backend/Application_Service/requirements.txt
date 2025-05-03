@@ -2,5 +2,7 @@ django
 djangorestframework
 mongoengine
 django-rest-framework-mongoengine
+djangorestframework-simplejwt[crypto]
+requests
 
 #  python -m pip install -r .\requirements.txt

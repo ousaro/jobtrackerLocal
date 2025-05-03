@@ -1,0 +1,40 @@
+_format_version: "1.1"
+services:
+  - name: application_service
+    url: http://host.docker.internal:5002  # http://application_service.service.consul:5002
+    routes:
+      - name: application_service-route
+        paths:
+          - /api/application_service
+    plugins:
+      - name: jwt
+
+# this used when using Consul for service discovery or for load balancing
+# upstreams:
+#   - name: localhost # application_service.service.consul
+#     healthchecks:
+#       active:
+#         http_path: /health
+#         timeout: 1
+#         healthy:
+#           http_statuses: [200]
+#         unhealthy:
+#           http_statuses: [500]
+      
+consumers:
+  - username: jobTracker         # app name
+    custom_id: jobTracker     # app id for tracking
+    jwt_secrets:
+      - key: JobTracker
+        secret: mysecret
+        algorithm: RS256
+        rsa_public_key: |
+          -----BEGIN PUBLIC KEY-----
+          MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAynEZ0WQuWqUSr7wwKn5e
+          qflvw9fBjhq3FhQIvIyA/Qr+Slk5doBJvqlpnAR4YGoSrDNf8pvJECBRT2KlgWWt
+          cOlWaOdIEmaiUdGdlxVrVdx1ZcLjLVLThWg+UG8l2L/Z9D3mC8VXECWzSNE1ugfw
+          RDD6sIB5TaY4r0Ve9OCfcLD+OCeNZjgsYUFRu8IAoDzZnBeb1dqdneIRTnq7Xvls
+          fvzdOjWCOqiKuH6M1PkqcfeJZeyRZdnX30UJEUjM10ZkW+k97dLC1/3xVnwMJjr1
+          igN7lNvPgxCeRs8jRF4VZfWOZnQ2OJFdzN3qeWdtQn4sJZDOBMainQsSNFck2Nu1
+          bwIDAQAB
+          -----END PUBLIC KEY-----
