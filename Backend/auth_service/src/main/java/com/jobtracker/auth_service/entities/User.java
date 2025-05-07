@@ -1,4 +1,4 @@
-package com.jobtracker.auth_service;
+package com.jobtracker.auth_service.entities;
 
 
 import jakarta.persistence.Column;

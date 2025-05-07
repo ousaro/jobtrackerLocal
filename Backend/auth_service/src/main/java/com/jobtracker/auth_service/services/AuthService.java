@@ -1,12 +1,22 @@
-package com.jobtracker.auth_service;
+package com.jobtracker.auth_service.services;
 
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import lombok.AllArgsConstructor;
+import com.jobtracker.auth_service.entities.User;
+import com.jobtracker.auth_service.repositories.UserRepository;
+import com.jobtracker.auth_service.utils.LoginRequest;
+import com.jobtracker.auth_service.utils.LoginResponse;
+import com.jobtracker.auth_service.utils.RegisterRequest;
+import com.jobtracker.auth_service.utils.RegisterResponse;
+
+import lombok.RequiredArgsConstructor;
+
+
+
 
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class AuthService {
 
     private final UserRepository userRepository;

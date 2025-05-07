@@ -1,0 +1,80 @@
+package com.jobtracker.interview_service.services;
+
+
+import org.springframework.stereotype.Service;
+
+import com.jobtracker.interview_service.Utils.InterviewMapper;
+import com.jobtracker.interview_service.Utils.InterviewRequest;
+import com.jobtracker.interview_service.Utils.InterviewResponse;
+import com.jobtracker.interview_service.entities.Interview;
+import com.jobtracker.interview_service.repositories.InterviewRepository;
+
+
+import lombok.RequiredArgsConstructor;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class InterviewService {
+
+
+    final private InterviewRepository repository;
+    final private InterviewMapper mapper;
+
+    public InterviewResponse createInterview(InterviewRequest request) {
+        Interview interview = mapper.toInterview(request);
+        return mapper.toInterviewResponse(repository.save(interview));
+    }
+
+    public List<InterviewResponse> getAllInterviews() {
+        // Fetch all interviews from the repository and map them to InterviewResponse and handle null values
+        
+        List<InterviewResponse> interviewResponses = repository.findAll().stream()
+                .map(mapper::toInterviewResponse)
+                .collect(Collectors.toList());
+        // Filter out null values from the list
+        interviewResponses.removeIf(interviewResponse -> interviewResponse == null);
+        return interviewResponses;
+       
+    }
+
+    public InterviewResponse getInterviewById(String id) {
+        Optional<Interview> interviewOpt = repository.findById(id);
+        return interviewOpt.map(mapper::toInterviewResponse).orElse(null);
+    }
+
+    public InterviewResponse updateInterview(String id, InterviewRequest request) {
+        Optional<Interview> interviewOpt = repository.findById(id);
+        if (interviewOpt.isPresent()) {
+            Interview interview = interviewOpt.get();
+            // Only update fields if they are not null in the request
+            if (request.getCompanyName() != null)
+                interview.setCompanyName(request.getCompanyName());
+            if (request.getPositionTitle() != null)
+                interview.setPositionTitle(request.getPositionTitle());
+            if (request.getDateTime() != null)
+                interview.setDateTime(request.getDateTime());
+            if (request.getType() != null)
+                interview.setType(request.getType());
+            if (request.getNotes() != null)
+                interview.setNotes(request.getNotes());
+            if (request.getPreparationDetails() != null)
+                interview.setPreparationDetails(request.getPreparationDetails());
+            // Save and return the updated response
+            return mapper.toInterviewResponse(repository.save(interview));
+        }
+        return null;
+    }
+    
+
+    public boolean deleteInterview(String id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return true;
+        }
+        return false;
+    }
+}

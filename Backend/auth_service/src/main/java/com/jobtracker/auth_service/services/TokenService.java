@@ -1,4 +1,4 @@
-package com.jobtracker.auth_service;
+package com.jobtracker.auth_service.services;
 
 import java.security.interfaces.RSAPrivateKey;
 import java.util.Date;

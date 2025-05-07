@@ -1,4 +1,4 @@
-package com.jobtracker.auth_service;
+package com.jobtracker.auth_service.controllers;
 
 
 import org.springframework.http.ResponseEntity;
@@ -8,12 +8,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import lombok.AllArgsConstructor;
+import com.jobtracker.auth_service.services.AuthService;
+import com.jobtracker.auth_service.utils.LoginRequest;
+import com.jobtracker.auth_service.utils.LoginResponse;
+import com.jobtracker.auth_service.utils.RegisterRequest;
+import com.jobtracker.auth_service.utils.RegisterResponse;
+
+
+import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequestMapping("/api/auth")
-@AllArgsConstructor
-
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthService authService;

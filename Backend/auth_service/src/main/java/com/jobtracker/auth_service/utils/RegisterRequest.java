@@ -1,4 +1,4 @@
-package com.jobtracker.auth_service;
+package com.jobtracker.auth_service.utils;
 
 import lombok.Getter;
 import lombok.Setter;

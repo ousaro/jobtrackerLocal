@@ -36,7 +36,7 @@ const mockInterviews: Interview[] = [
     companyName: 'TechCorp',
     positionTitle: 'Senior Frontend Developer',
     dateTime: new Date('2024-03-20T14:00:00'),
-    type: 'ONLINE',
+    type: 'ONLINE', // ONLINE, ONSITE, PHONE
     notes: 'Technical interview with the team lead',
     preparationDetails: 'Review React hooks and performance optimization',
   },
