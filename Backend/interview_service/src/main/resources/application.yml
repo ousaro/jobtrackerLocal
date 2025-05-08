@@ -1,17 +1,10 @@
 server:
-  port: 5000
+  port: 5003
 
 
 spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          public-key-location: classpath:public.pem
-          expiration: 604800000   # to set the expiration time for the JWT about 7 days (in milliseconds)
-
   application:
-    name: auth-service
+    name: interview-service
   cloud:
     consul:
       host: localhost
@@ -22,6 +15,6 @@ spring:
         register: true
         health-check-path: /health
         health-check-interval: 10s
-        service-name: auth-service
+        service-name: interview-service
         instance-id: ${spring.application.name}-${random.value}
 

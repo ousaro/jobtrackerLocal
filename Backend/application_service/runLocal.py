@@ -1,4 +1,5 @@
 import os
+from decouple import config
 
-
-os.system('python manage.py runserver 5002')
+port = config("PORT", default="8000")
+os.system(f"python manage.py runserver {port}")

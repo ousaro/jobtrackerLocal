@@ -1,4 +1,5 @@
 from django.apps import AppConfig
+from decouple import config
 import requests
 import socket
 
@@ -8,14 +9,16 @@ class ApiConfig(AppConfig):
 
     def ready(self):
         # Register with Consul
-        service_host = 'host.docker.internal'   # container IP or service name (use docker DNS if not localhost)
-        service_port = 5002         # the port your DRF service runs on
-        consul_host = 'localhost'       # use 'localhost' if Consul runs on local, else 'consul' (docker service name)
-        consul_port = 8500
+        service_host = config('SERVICE_HOST', default='host.docker.internal') # container IP or service name (use docker DNS if not localhost)
+        service_port = config('PORT', default=5002, cast=int) 
+        consul_host = config('CONSUL_HOST', default='localhost') # use 'localhost' if Consul runs on local, else 'consul' (docker service name)
+        consul_port = config('CONSUL_PORT', default=8500, cast=int)
+        service_id = config('SERVICE_ID', default='application_service')
+        service_name = config('SERVICE_NAME', default='application_service')
 
         payload = {
-            "ID": "application_service",
-            "Name": "application_service",
+            "ID": service_id,
+            "Name": service_name,
             "Address": service_host,
             "Port": service_port,
             "Check": {

@@ -2,9 +2,8 @@ const express = require('express');
 const registerService = require('./Config/registerService');
 require('dotenv').config();
 
-
 const app = express();
-const PORT = process.env.PORT || 5005;
+const PORT = process.env.PORT || 5008;
 
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -12,6 +11,6 @@ app.get('/health', (req, res) => {
 });
 
 app.listen(PORT, () => {
-    console.log(`Analytics service is running on port ${PORT}`);
+    console.log(`Norification service is running on port ${PORT}`);
     registerService()
 });

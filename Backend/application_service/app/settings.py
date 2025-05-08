@@ -11,7 +11,9 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
 import mongoengine
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,10 +26,10 @@ with open(BASE_DIR / "keys/public.pem") as f:
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-9teo^f1ntby*zv2riy+kyv8lnm7&va_!g_jeckw+#-i3tu8l7s'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
 ALLOWED_HOSTS = [
     'localhost',
@@ -105,14 +107,14 @@ WSGI_APPLICATION = 'app.wsgi.application'
 # }
 
 # MongoDB settings
-
 mongoengine.connect(
-    db='Aplications_Service',
-    host='localhost',
-    port=27017,
+    db=config('MONGO_DB'),
+    host=config('MONGO_HOST'),
+    port=config('MONGO_PORT', cast=int)
     #username='your_username',  # Remove if not needed
     #password='your_password',  # Remove if not needed
 )
+
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

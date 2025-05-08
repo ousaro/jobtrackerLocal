@@ -1,11 +1,90 @@
 _format_version: "1.1"
 services:
+  - name: auth-service
+    url: http://host.docker.internal:5000  # http://auth_service.service.consul:5000
+    routes:
+      - name: auth-service-route
+        paths:
+          - /api/auth_service
+  
+  - name: user_service
+    url: http://host.docker.internal:5001  # http://user_service.service.consul:5001
+    routes:
+      - name: user_service-route
+        paths:
+          - /api/user_service
+    plugins:
+      - name: jwt
+    
   - name: application_service
     url: http://host.docker.internal:5002  # http://application_service.service.consul:5002
     routes:
       - name: application_service-route
         paths:
           - /api/application_service
+    plugins:
+      - name: jwt
+
+  - name: interview_service
+    url: http://host.docker.internal:5003  # http://interview_service.service.consul:5003
+    routes:
+      - name: interview_service-route
+        paths:
+          - /api/interview_service
+    plugins:
+      - name: jwt
+
+  - name: contact_service
+    url: http://host.docker.internal:5004  # http://contact_service.service.consul:5004
+    routes:
+      - name: contact_service-route
+        paths:
+          - /api/contact_service
+    plugins:
+      - name: jwt
+    
+  - name: analytics_service
+    url: http://host.docker.internal:5005  # http://analytics_service.service.consul:5005
+    routes:
+      - name: analytics_service-route
+        paths:
+          - /api/analytics_service
+    plugins:
+      - name: jwt
+  
+  - name: dashboard_service
+    url: http://host.docker.internal:5006  # http://dashboard_service.service.consul:5006
+    routes:
+      - name: dashboard_service-route
+        paths:
+          - /api/dashboard_service
+    plugins:
+      - name: jwt
+
+  - name: fileUpload_service
+    url: http://host.docker.internal:5007  # http://fileupload_service.service.consul:5007
+    routes:
+      - name: fileupload_service-route
+        paths:
+          - /api/fileupload_service
+    plugins:
+      - name: jwt
+  
+  - name: notification_service
+    url: http://host.docker.internal:5008  # http://notification_service.service.consul:5008
+    routes:
+      - name: notification_service-route
+        paths:
+          - /api/notification_service
+    plugins:
+      - name: jwt
+  
+  - name: search_service
+    url: http://host.docker.internal:5009  # http://search_service.service.consul:5009
+    routes:
+      - name: search_service-route
+        paths:
+          - /api/search_service
     plugins:
       - name: jwt
 
@@ -20,7 +99,8 @@ services:
 #           http_statuses: [200]
 #         unhealthy:
 #           http_statuses: [500]
-      
+
+#   this is for consumers to be able to use JWT authentication    
 consumers:
   - username: jobTracker         # app name
     custom_id: jobTracker     # app id for tracking

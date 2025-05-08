@@ -18,7 +18,7 @@ import com.jobtracker.auth_service.utils.RegisterResponse;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/auth")
+@RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 

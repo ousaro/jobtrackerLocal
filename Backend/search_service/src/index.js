@@ -1,15 +1,17 @@
 const express = require('express');
 const cors = require('cors')
-const startConsumer = require('./src/Config/consumer');
-const authMiddleware = require('./src/Middlewares/authMiddleware');
+const startConsumer = require('./Config/consumer');
+const authMiddleware = require('./Middlewares/authMiddleware');
+const registerService = require('./Config/registerService');
 require('dotenv').config();
 
 // Load environment variables from .env file
-const PORT = process.env.PORT || 5000;
+const PORT = process.env.PORT || 5009;
 
 
 // routers
-const searchRoutes = require('./src/routers/searchRoutes');
+const searchRoutes = require('./routers/searchRoutes');
+const healthRouter = require('./routers/healthRouter');
 
 
 const app = express();
@@ -24,10 +26,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/api/search",authMiddleware, searchRoutes);
-
+app.use("/search",authMiddleware, searchRoutes);
+app.use("/", healthRouter);
 
 app.listen(PORT, async () => {
   console.log(`SearchService running on http://localhost:${PORT}`);
   await startConsumer(); // Start RabbitMQ listener
+  registerService();
 });

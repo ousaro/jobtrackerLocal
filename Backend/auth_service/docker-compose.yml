@@ -20,7 +20,7 @@ services:
     depends_on:
       - db
     ports:
-      - "8080:8080"
+      - "5000:8080" # internal port 8080 mapped to external port 5000
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/auth
       SPRING_DATASOURCE_USERNAME: postgres
