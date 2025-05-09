@@ -15,15 +15,29 @@ import { getTokenClaims } from '../../utils/tokenService';
 import { getProfileByEmail } from '../../api/userApi/userApi';
 
 const mockStats: DashboardStats = {
-  totalApplications: 24,
   inProgress: 12,
   offers: 2,
-  rejected: 10,
 };
+
+const mockDashboardContent = {
+  upcomingInterviews: [
+    // Add mock data for upcoming interviews
+    // { id: 1, date: '2023-10-01', time: '10:00 AM', company: 'Tech Corp' },
+    // { id: 2, date: '2023-10-05', time: '2:00 PM', company: 'Web Solutions' },
+  ],
+  recentApplications: [
+    // Add mock data for recent applications    
+    // { id: 1, date: '2023-09-25', company: 'Startup Inc.' },
+    // { id: 2, date: '2023-09-20', company: 'Innovate Ltd.' }
+  ],
+}
+
+
 
 export default function DashboardPage() {
   const { user } = useAuth();
   const [stats] = useState<DashboardStats>(mockStats);
+  const [dashboardContent] = useState(mockDashboardContent);
 
 
   return (
@@ -38,13 +52,6 @@ export default function DashboardPage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card className="p-6">
           <div className="flex items-center space-x-2">
-            <Briefcase className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium">Total Applications</h3>
-          </div>
-          <p className="text-2xl font-bold">{stats.totalApplications}</p>
-        </Card>
-        <Card className="p-6">
-          <div className="flex items-center space-x-2">
             <Clock className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-medium">In Progress</h3>
           </div>
@@ -57,13 +64,7 @@ export default function DashboardPage() {
           </div>
           <p className="text-2xl font-bold">{stats.offers}</p>
         </Card>
-        <Card className="p-6">
-          <div className="flex items-center space-x-2">
-            <XCircle className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium">Rejected</h3>
-          </div>
-          <p className="text-2xl font-bold">{stats.rejected}</p>
-        </Card>
+
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">

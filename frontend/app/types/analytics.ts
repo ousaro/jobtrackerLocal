@@ -1,3 +1,5 @@
+import { Interview } from "./interview";
+
 export interface AnalyticsData {
   applicationsOverTime: {
     month: string;
@@ -8,21 +10,18 @@ export interface AnalyticsData {
     value: number;
     color: string;
   }[];
-  applicationSource: {
-    name: string;
-    value: number;
-    color: string;
-  }[];
-  responseTime: {
-    name: string;
-    value: number;
-    color: string;
-  }[];
 }
 
 export interface DashboardStats {
-  totalApplications: number;
   inProgress: number;
   offers: number;
-  rejected: number;
 } 
+
+export interface DashboardContent {
+  upcomingInterviews: Interview[];
+  recentApplications: Application[];
+}
+
+interface Application {
+
+}

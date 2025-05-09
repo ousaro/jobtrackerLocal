@@ -1,5 +1,6 @@
 const express = require('express');
 const registerService = require('./Config/registerService');
+const startDashboardConsumer = require('./Config/consumer');
 require('dotenv').config();
 
 const app = express();
@@ -13,4 +14,11 @@ app.get('/health', (req, res) => {
 app.listen(PORT, () => {
     console.log(`Dashbooard service is running on port ${PORT}`);
     registerService()
+
+    startDashboardConsumer().then(() => {
+        console.log('📊 Dashboard consumer started successfully');
+    }).catch((error) => {
+        console.error('❌ Error starting dashboard consumer:', error);
+    });
+
 });

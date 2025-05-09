@@ -23,10 +23,13 @@ public class InterviewService {
 
     final private InterviewRepository repository;
     final private InterviewMapper mapper;
+    final private RabbitMQPublisher rabbitMQService;
 
     public InterviewResponse createInterview(InterviewRequest request) {
         Interview interview = mapper.toInterview(request);
-        return mapper.toInterviewResponse(repository.save(interview));
+        InterviewResponse resInterview = mapper.toInterviewResponse(repository.save(interview));
+        rabbitMQService.publishInterviewCreatedEvent(resInterview);
+        return resInterview;
     }
 
     public List<InterviewResponse> getAllInterviews() {
@@ -64,7 +67,10 @@ public class InterviewService {
             if (request.getPreparationDetails() != null)
                 interview.setPreparationDetails(request.getPreparationDetails());
             // Save and return the updated response
-            return mapper.toInterviewResponse(repository.save(interview));
+
+            InterviewResponse resInterview = mapper.toInterviewResponse(repository.save(interview));
+            rabbitMQService.publishInterviewUpdatedEvent(resInterview);
+            return resInterview;
         }
         return null;
     }

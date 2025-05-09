@@ -31,19 +31,6 @@ const statusData: AnalyticsData['applicationStatus'] = [
   { name: 'Rejected', value: 10, color: 'hsl(var(--chart-4))' },
 ];
 
-const sourceData: AnalyticsData['applicationSource'] = [
-  { name: 'LinkedIn', value: 20, color: 'hsl(var(--chart-1))' },
-  { name: 'Indeed', value: 15, color: 'hsl(var(--chart-2))' },
-  { name: 'Company Website', value: 10, color: 'hsl(var(--chart-3))' },
-  { name: 'Referral', value: 5, color: 'hsl(var(--chart-4))' },
-];
-
-const responseTimeData: AnalyticsData['responseTime'] = [
-  { name: '1-3 days', value: 15, color: 'hsl(var(--chart-1))' },
-  { name: '4-7 days', value: 25, color: 'hsl(var(--chart-2))' },
-  { name: '1-2 weeks', value: 10, color: 'hsl(var(--chart-3))' },
-  { name: '2+ weeks', value: 5, color: 'hsl(var(--chart-4))' },
-];
 
 export default function AnalyticsPage() {
   return (
@@ -95,52 +82,6 @@ export default function AnalyticsPage() {
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Application Sources</h2>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={sourceData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {sourceData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Response Time Distribution</h2>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <PieChart>
-                <Pie
-                  data={responseTimeData}
-                  cx="50%"
-                  cy="50%"
-                  outerRadius={100}
-                  dataKey="value"
-                  label={({ name, value }) => `${name}: ${value}`}
-                >
-                  {responseTimeData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Key Metrics</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-secondary">
@@ -161,39 +102,7 @@ export default function AnalyticsPage() {
             </div>
           </div>
         </Card>
-
-        <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Trending Skills</h2>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>React</span>
-                <span>75%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full">
-                <div className="h-full bg-blue-500 rounded-full" style={{ width: '75%' }} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>TypeScript</span>
-                <span>65%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full">
-                <div className="h-full bg-green-500 rounded-full" style={{ width: '65%' }} />
-              </div>
-            </div>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span>Node.js</span>
-                <span>60%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full">
-                <div className="h-full bg-yellow-500 rounded-full" style={{ width: '60%' }} />
-              </div>
-            </div>
-          </div>
-        </Card>
+       
       </div>
     </div>
   );

@@ -5,5 +5,7 @@ django-rest-framework-mongoengine
 djangorestframework-simplejwt[crypto]
 requests
 python-decouple
+pika
+
 
 #  python -m pip install -r .\requirements.txt

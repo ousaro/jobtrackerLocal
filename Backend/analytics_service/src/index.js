@@ -1,5 +1,6 @@
 const express = require('express');
 const registerService = require('./Config/registerService');
+const start = require('./Config/consumer');
 require('dotenv').config();
 
 
@@ -13,5 +14,11 @@ app.get('/health', (req, res) => {
 
 app.listen(PORT, () => {
     console.log(`Analytics service is running on port ${PORT}`);
-    registerService()
+    registerService();
+
+    start().catch(err => {
+        console.error('❌ Error in analytics consumer:', err);
+        process.exit(1);
+    });
+
 });

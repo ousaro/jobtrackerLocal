@@ -37,6 +37,14 @@ ALLOWED_HOSTS = [
     'host.docker.internal', # For Docker on Windows/Mac
 ]
 
+# RabbitMQ settings
+# settings.py
+RABBITMQ_URL = config('RABBITMQ_URL', default='amqp://guest:guest@localhost:5672')
+RABBITMQ_EXCHANGE = config('RABBITMQ_EXCHANGE', default='jobtracker.exchange')
+RABBITMQ_EXCHANGE_TYPE = config('RABBITMQ_EXCHANGE_TYPE', default='topic')
+RABBITMQ_ROUTING_KEY_APPLICATION_CREATED = config('RABBITMQ_ROUTING_KEY_APPLICATION_CREATED', default='application.created')
+RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED = config('RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED', default='application.updated')
+
 
 # JWT Authentication settings
 # REST_FRAMEWORK = { 
