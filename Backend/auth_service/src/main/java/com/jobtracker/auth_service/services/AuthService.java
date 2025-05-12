@@ -1,27 +1,48 @@
 package com.jobtracker.auth_service.services;
 
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.jobtracker.auth_service.entities.User;
 import com.jobtracker.auth_service.repositories.UserRepository;
 import com.jobtracker.auth_service.utils.LoginRequest;
 import com.jobtracker.auth_service.utils.LoginResponse;
+import com.jobtracker.auth_service.utils.ProfileRequest;
+import com.jobtracker.auth_service.utils.ProfileResponse;
 import com.jobtracker.auth_service.utils.RegisterRequest;
 import com.jobtracker.auth_service.utils.RegisterResponse;
 
 import lombok.RequiredArgsConstructor;
 
-
+import java.util.List;
 
 
 @Service
 @RequiredArgsConstructor
 public class AuthService {
 
+    private final RestTemplate restTemplate;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokenService;
+    private final DiscoveryClient discoveryClient;
+
+    @Value("${spring.services.profile-service.url}")
+    private String profileServiceUrl;
+    @Value("${spring.services.profile-service.name}")
+    private String profileServiceName;
+
+
+    public boolean isServiceAvailable(String serviceName) {
+        List<ServiceInstance> instances = discoveryClient.getInstances(serviceName);
+        return (instances != null && !instances.isEmpty());
+    }
+
 
     public RegisterResponse register(RegisterRequest request) {
         // Check if user already exists
@@ -38,14 +59,39 @@ public class AuthService {
 
         userRepository.save(user);
 
-        // Prepare response
-        RegisterResponse registerResponse = new RegisterResponse();
-        registerResponse.setEmail(user.getEmail());
-        registerResponse.setFullName(user.getFullName());
-        registerResponse.setPhone(request.getPhone());
-        registerResponse.setToken(tokenService.generateToken(user.getEmail()));
+         //Call Profile Service to create or update profile
+        try {
 
-        return registerResponse;
+            ProfileRequest profileRequest = new ProfileRequest();
+            profileRequest.setEmail(user.getEmail());
+            profileRequest.setFullName(user.getFullName());
+            profileRequest.setPhone(request.getPhone());
+
+            if(!isServiceAvailable(profileServiceName)) throw new RuntimeException("No such service found");
+            // Send the request to the Profile Service
+            ResponseEntity<ProfileResponse> response = restTemplate.postForEntity(profileServiceUrl, profileRequest, ProfileResponse.class);
+
+
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Profile creation failed");
+            }
+
+            // If Profile Service is successful, issue token
+            RegisterResponse registerResponse = new RegisterResponse();
+            registerResponse.setEmail(user.getEmail());
+            registerResponse.setFullName(user.getFullName());
+            registerResponse.setPhone(request.getPhone());
+            registerResponse.setToken(tokenService.generateToken(user.getEmail()));
+            registerResponse.setProfile(response.getBody());
+
+            return registerResponse;
+
+        } catch (Exception e) {
+            // If Profile Service fails, roll back user creation
+            userRepository.delete(user); // Rollback user creation in case of failure
+            throw new RuntimeException("User registration failed: " + e.getMessage());
+        }
     }
 
     public LoginResponse login(LoginRequest request) {
@@ -66,17 +112,6 @@ public class AuthService {
         loginResponse.setToken(token);
 
         return loginResponse;
-    }
-
-    public String rollback() {
-        // Get the last user added
-        User lastUser = userRepository.findTopByOrderByIdDesc()
-                .orElseThrow(() -> new RuntimeException("No users found to rollback"));
-        
-        // Delete the user
-        userRepository.delete(lastUser);
-        
-        return "Success";
     }
 
     

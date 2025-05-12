@@ -34,8 +34,4 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(loginRequest));
     }
 
-    @GetMapping("/rollback")
-    public ResponseEntity<String> rollback() {       
-        return ResponseEntity.ok(authService.rollback());
-    }
 }

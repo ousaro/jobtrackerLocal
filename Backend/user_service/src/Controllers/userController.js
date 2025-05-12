@@ -81,7 +81,13 @@ const addProfile = async(req, res) => {;
         })
         await user.save();
         const data = {id: user._id, fullName};
-        publishToQueue(process.env.USER_QUEUE, data); // Publish to RabbitMQ queue
+         try {
+            await publishToQueue(process.env.USER_QUEUE, data);
+        } catch (publishError) {
+            // Compensation: Delete the user if publish fails
+            await User.deleteOne({ _id: user._id }); 
+            return res.status(500).json({ message: "Failed to notify search service. User rolled back." });
+        }
         res.status(201).json({message: "User profile created successfully", data});
     }
     catch(e) {

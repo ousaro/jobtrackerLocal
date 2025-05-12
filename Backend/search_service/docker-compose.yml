@@ -23,24 +23,24 @@ services:
     networks:
       - shared-network
 
-  search-service:
-    build: .
-    ports:
-      - "5009:5009"
-    depends_on:
-      - meilisearch
-      - rabbitmq
-    environment:
-      - MEILI_HOST=http://meilisearch:7700
-      - MEILI_KEY=masterKey
-      - RABBITMQ_URL=amqp://rabbitmq:5672
-      - USER_QUEUE=user.index
-      - CONTACT_QUEUE=contact.index
-      - APP_QUEUE=application.index
-      - PORT=5000
-    restart: always
-    networks:
-      - shared-network
+  # search-service:
+  #   build: .
+  #   ports:
+  #     - "5009:5009"
+  #   depends_on:
+  #     - meilisearch
+  #     - rabbitmq
+  #   environment:
+  #     - MEILI_HOST=http://meilisearch:7700
+  #     - MEILI_KEY=masterKey
+  #     - RABBITMQ_URL=amqp://rabbitmq:5672
+  #     - USER_QUEUE=user.index
+  #     - CONTACT_QUEUE=contact.index
+  #     - APP_QUEUE=application.index
+  #     - PORT=5000
+  #   restart: always
+  #   networks:
+  #     - shared-network
 
 networks:
   shared-network:

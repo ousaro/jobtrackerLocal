@@ -12,12 +12,18 @@ spring:
 
   application:
     name: auth-service
+
+  services:
+    profile-service:
+      name: user-service
+      url: http://${spring.services.profile-service.name}/users/profile/
+      
   cloud:
     consul:
       host: localhost
       port: 8500
       discovery:
-        hostname: host.docker.internal
+        hostname: 192.168.29.43 # host.docker.internal
         port: ${server.port}
         register: true
         health-check-path: /health
