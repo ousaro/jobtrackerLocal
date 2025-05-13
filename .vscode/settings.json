@@ -1,3 +1,7 @@
 {
     "java.compile.nullAnalysis.mode": "automatic",
+<<<<<<< HEAD
+=======
+    "makefile.configureOnOpen": true
+>>>>>>> 854ab42 (TO PULL!!!)
 }
