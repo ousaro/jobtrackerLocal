@@ -28,7 +28,7 @@ mongoose.connect(process.env.MONGO_URI, {
 })
 .then(() => {
     console.log("MongoDB connected successfully");
-    app.listen(PORT, () => {
+    app.listen(PORT,async () => {
         console.log(`User service running on port ${PORT}`)
         registerService()
     })

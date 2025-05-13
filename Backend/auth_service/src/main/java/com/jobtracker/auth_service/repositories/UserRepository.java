@@ -9,4 +9,5 @@ import com.jobtracker.auth_service.entities.User;
 public interface UserRepository extends JpaRepository<User, Integer> {
     Optional<User> findByEmail(String email);
     Optional<User> findTopByOrderByIdDesc();
+    void deleteByEmail(String email);
 }

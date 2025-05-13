@@ -1,5 +1,6 @@
 const User = require('../Models/user.js');
-const {publishToQueue} = require('../Config/publisher.js');
+const {publishProfileAction} = require('../Config/publisher.js');
+const {deleteAuthUser} = require('../Config/getServices.js');
 
 const getAllProfiles = async(req, res) => {
     try {
@@ -82,7 +83,7 @@ const addProfile = async(req, res) => {;
         await user.save();
         const data = {id: user._id, fullName};
          try {
-            await publishToQueue(process.env.USER_QUEUE, data);
+            await publishProfileAction(process.env.USER_QUEUE, 'create', data);
         } catch (publishError) {
             // Compensation: Delete the user if publish fails
             await User.deleteOne({ _id: user._id }); 
@@ -121,7 +122,7 @@ const updateProfile = async(req, res) => {
 
         const updatedUser = await User.findByIdAndUpdate(uid, {$set: updates}, {new: true});
         const data = {id: updatedUser._id, fullName: updatedUser.fullName};
-        publishToQueue(process.env.USER_QUEUE, data);
+        publishProfileAction(process.env.USER_QUEUE, 'create', data);
         res.json(updatedUser);
     }
     catch(e) {
@@ -130,11 +131,70 @@ const updateProfile = async(req, res) => {
     }
 }
 
+const deleteProfile = async (req, res) => {
+  const uid = req.params.uid;
+  if (!uid) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  let deletedUserData = null;
+  let authDeleted = false;
+  let published = false;
+
+  try {
+    const user = await User.findById(uid);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    deletedUserData = user.toObject(); 
+    await User.deleteOne({ _id: uid });
+
+    await deleteAuthUser(user.email);
+    authDeleted = true;
+
+    await publishProfileAction(process.env.USER_QUEUE, 'delete', { id: uid });
+    published = true;
+
+    res.json({ message: "User deleted successfully" });
+
+  } catch (e) {
+    console.error("Saga failed:", e);
+
+    if (deletedUserData) {
+      try {
+        await User.create([deletedUserData]);
+      } catch (err) {
+        console.error("Failed to roll back user deletion:", err);
+      }
+    }
+
+    if (authDeleted) {
+    //   try {
+    //     await restoreAuthUser(deletedUserData); 
+    //   } catch (err) {
+    //     console.error("Failed to restore auth user:", err);
+    //   }
+    }
+
+    if (published) {
+    //   try {
+    //     await publishProfileAction(process.env.USER_QUEUE, 'rollback-delete', { id: uid });
+    //   } catch (err) {
+    //     console.error("Failed to publish rollback message:", err);
+    //   }
+    }
+
+    res.status(500).json({ message: "Saga failed, changes rolled back" });
+  }
+};
+
 module.exports = {
     getAllProfiles,
     getProfilesByIds,
     getProfile,
     getProfileWithEmail,
     addProfile,
-    updateProfile
+    updateProfile,
+    deleteProfile   
 }

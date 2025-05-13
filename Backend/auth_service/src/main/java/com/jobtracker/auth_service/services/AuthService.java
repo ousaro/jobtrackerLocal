@@ -114,5 +114,13 @@ public class AuthService {
         return loginResponse;
     }
 
-    
+    public String delete(String email) {
+        // Delete user locally
+        userRepository.deleteByEmail(email);
+
+        return email;
+    }
+
+
+
 }

@@ -10,17 +10,22 @@ async function connect() {
   return channel;
 }
 
-async function publishToQueue(queue, payload) {
+async function publishProfileAction(queue, action, data) {
   const ch = await connect();
   try {
     await ch.assertQueue(queue);
-    ch.sendToQueue(queue, Buffer.from(JSON.stringify(payload)));
-    console.log(`Published to queue "${queue}"`);
+    const message = {
+      action,
+      data,
+    };
+    ch.sendToQueue(queue, Buffer.from(JSON.stringify(message)));
+    console.log(`Published "${action}" to queue "${queue}"`);
   } catch (error) {
     console.error(`Failed to publish to queue "${queue}":`, error.message);
   }
 }
 
+
 module.exports = {
-  publishToQueue,
+  publishProfileAction,
 };

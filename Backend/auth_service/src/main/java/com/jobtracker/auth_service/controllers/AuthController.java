@@ -2,11 +2,7 @@ package com.jobtracker.auth_service.controllers;
 
 
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.jobtracker.auth_service.services.AuthService;
 import com.jobtracker.auth_service.utils.LoginRequest;
@@ -33,5 +29,12 @@ public class AuthController {
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest loginRequest) {       
         return ResponseEntity.ok(authService.login(loginRequest));
     }
+
+    @DeleteMapping("/{email}")
+    public ResponseEntity<String> delete(@PathVariable String email) {
+        String deletedUser = authService.delete(email);
+        return ResponseEntity.ok(deletedUser);
+    }
+
 
 }
