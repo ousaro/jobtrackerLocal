@@ -138,8 +138,6 @@ const deleteProfile = async (req, res) => {
   }
 
   let deletedUserData = null;
-  let authDeleted = false;
-  let published = false;
 
   try {
     const user = await User.findById(uid);
@@ -149,12 +147,10 @@ const deleteProfile = async (req, res) => {
 
     deletedUserData = user.toObject(); 
     await User.deleteOne({ _id: uid });
-
+    
     await deleteAuthUser(user.email);
-    authDeleted = true;
-
     await publishProfileAction(process.env.USER_QUEUE, 'delete', { id: uid });
-    published = true;
+
 
     res.json({ message: "User deleted successfully" });
 
@@ -167,22 +163,6 @@ const deleteProfile = async (req, res) => {
       } catch (err) {
         console.error("Failed to roll back user deletion:", err);
       }
-    }
-
-    if (authDeleted) {
-    //   try {
-    //     await restoreAuthUser(deletedUserData); 
-    //   } catch (err) {
-    //     console.error("Failed to restore auth user:", err);
-    //   }
-    }
-
-    if (published) {
-    //   try {
-    //     await publishProfileAction(process.env.USER_QUEUE, 'rollback-delete', { id: uid });
-    //   } catch (err) {
-    //     console.error("Failed to publish rollback message:", err);
-    //   }
     }
 
     res.status(500).json({ message: "Saga failed, changes rolled back" });

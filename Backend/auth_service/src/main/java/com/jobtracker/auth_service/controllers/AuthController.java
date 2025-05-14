@@ -1,7 +1,9 @@
 package com.jobtracker.auth_service.controllers;
 
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import com.jobtracker.auth_service.services.AuthService;
@@ -12,6 +14,8 @@ import com.jobtracker.auth_service.utils.RegisterResponse;
 
 
 import lombok.RequiredArgsConstructor;
+
+import java.util.Collections;
 
 @RestController
 @RequestMapping("/auth")
@@ -31,7 +35,8 @@ public class AuthController {
     }
 
     @DeleteMapping("/{email}")
-    public ResponseEntity<String> delete(@PathVariable String email) {
+    @Transactional // essential
+    public ResponseEntity<String> delete(@PathVariable String email, HttpServletRequest request) {
         String deletedUser = authService.delete(email);
         return ResponseEntity.ok(deletedUser);
     }
