@@ -12,10 +12,10 @@ services:
     volumes:
       - mongo_data:/data/db
     networks:
-      - shared-network
+      - jbt-network
 
   mongo-express:
-    image: mongo-express
+    image: mongo-express:1.0.2
     container_name: mongo-express
     restart: always
     ports:
@@ -29,24 +29,33 @@ services:
     depends_on:
       - mongo
     networks:
-      - shared-network
+      - jbt-network
 
   user-service:
     build: .
     ports:
       - "5001:5001"
     environment:
-      MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo-user:27017/User-Service?authSource=admin
+      # Use the service name as the hostname not the container name
+      MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo:27017/User-Service?authSource=admin
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
       USER_QUEUE: user.index
       PORT: 5001
     depends_on:
       - mongo
+      - rabbitmq
     networks:
-      - shared-network
+      - jbt-network
+  
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
 
 networks:
-  shared-network:
+  jbt-network:
     external: true
 
 volumes:

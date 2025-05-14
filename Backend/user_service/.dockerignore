@@ -1,5 +1,4 @@
 node_modules
-npm-debug.log
 Dockerfile
 .dockerignore
 .git
@@ -7,3 +6,5 @@ Dockerfile
 .env
 dist
 coverage
+*.pem
+*.log
