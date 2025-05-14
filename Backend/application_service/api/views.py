@@ -9,7 +9,7 @@ from django.conf import settings
 
 from .models import JobApplication
 from .serializers import JobApplicationSerializer
-from utils.rabbitmq import publish_event
+from utils.rabbitmq import (publish_event, publish_to_app_queue)
 
 class JobApplicationListCreateView(ListCreateAPIView):
     queryset = JobApplication.objects.all()
@@ -23,6 +23,16 @@ class JobApplicationListCreateView(ListCreateAPIView):
             settings.RABBITMQ_ROUTING_KEY_APPLICATION_CREATED, 
             JobApplicationSerializer(application).data
         )
+        applicationData = JobApplicationSerializer(application).data
+        # Publish to application index queue
+        data = {
+            "id": applicationData["id"],
+            "position_title": applicationData["position_title"]
+        }
+        payload = {"action": "create", "data": data}
+        publish_to_app_queue(
+            payload
+        )
 
 class JobApplicationRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     queryset = JobApplication.objects.all()
@@ -35,6 +45,24 @@ class JobApplicationRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             settings.RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED, 
             JobApplicationSerializer(application).data
         )
+        applicationData = JobApplicationSerializer(application).data
+        # Publish to application index queue
+        data = {
+            "id": applicationData["id"],
+            "position_title": applicationData["position_title"]
+        }
+        payload = {"action": "create", "data": data}
+        publish_to_app_queue(
+            payload
+        )
+    
+    def perform_destroy(self, instance):
+        data = {"id": str(instance.id)}
+        payload = {"action": "delete", "data": data}
+        publish_to_app_queue(
+            payload
+        )
+        instance.delete()
 
 class HealthCheckView(APIView):
     def get(self, request, *args, **kwargs):

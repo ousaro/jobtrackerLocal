@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: contact-service
+
+  rabbitmq:
+    contact-queue: contact.index
+
   cloud:
     consul:
       host: localhost

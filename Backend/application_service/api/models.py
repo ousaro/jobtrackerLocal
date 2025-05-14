@@ -2,6 +2,7 @@ import mongoengine as me
 from datetime import datetime
 
 class JobApplication(me.Document):
+    owner_id = me.ObjectIdField(required=True)
     company_name = me.StringField(required=True)
     position_title = me.StringField(required=True)
     application_date = me.DateTimeField(required=True)

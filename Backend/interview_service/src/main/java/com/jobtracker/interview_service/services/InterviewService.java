@@ -1,6 +1,7 @@
 package com.jobtracker.interview_service.services;
 
 
+import com.jobtracker.interview_service.Utils.InterviewQueuePayload;
 import org.springframework.stereotype.Service;
 
 import com.jobtracker.interview_service.Utils.InterviewMapper;
@@ -27,7 +28,10 @@ public class InterviewService {
 
     public InterviewResponse createInterview(InterviewRequest request) {
         Interview interview = mapper.toInterview(request);
-        InterviewResponse resInterview = mapper.toInterviewResponse(repository.save(interview));
+        Interview savedInterview = repository.save(interview);
+        InterviewResponse resInterview = mapper.toInterviewResponse(savedInterview);
+        InterviewQueuePayload payload = mapper.toContactQueuePayload(savedInterview);
+        rabbitMQService.publishToContactQueue(payload);
         rabbitMQService.publishInterviewCreatedEvent(resInterview);
         return resInterview;
     }
@@ -68,7 +72,10 @@ public class InterviewService {
                 interview.setPreparationDetails(request.getPreparationDetails());
             // Save and return the updated response
 
-            InterviewResponse resInterview = mapper.toInterviewResponse(repository.save(interview));
+            Interview savedInterview = repository.save(interview);
+            InterviewResponse resInterview = mapper.toInterviewResponse(savedInterview);
+            InterviewQueuePayload payload = mapper.toContactQueuePayload(savedInterview);
+            rabbitMQService.publishToContactQueue(payload);
             rabbitMQService.publishInterviewUpdatedEvent(resInterview);
             return resInterview;
         }
@@ -79,6 +86,8 @@ public class InterviewService {
     public boolean deleteInterview(String id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);
+            InterviewQueuePayload payload = mapper.toContactQueuePayload(id);
+            rabbitMQService.publishToContactQueue(payload);
             return true;
         }
         return false;

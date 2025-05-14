@@ -44,7 +44,7 @@ RABBITMQ_EXCHANGE = config('RABBITMQ_EXCHANGE', default='jobtracker.exchange')
 RABBITMQ_EXCHANGE_TYPE = config('RABBITMQ_EXCHANGE_TYPE', default='topic')
 RABBITMQ_ROUTING_KEY_APPLICATION_CREATED = config('RABBITMQ_ROUTING_KEY_APPLICATION_CREATED', default='application.created')
 RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED = config('RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED', default='application.updated')
-
+APP_QUEUE= config('APP_QUEUE', default='application.index')
 
 # JWT Authentication settings
 # REST_FRAMEWORK = { 

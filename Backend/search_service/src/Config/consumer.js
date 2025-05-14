@@ -6,6 +6,7 @@ const queues = [
   { name: process.env.USER_QUEUE, index: 'users' },
   { name: process.env.CONTACT_QUEUE, index: 'contacts' },
   { name: process.env.APP_QUEUE, index: 'applications' },
+  {name: process.env.INTERVIEW_QUEUE, index: 'interviews'},
 ];
 async function startConsumer() {
   const conn = await amqp.connect(process.env.RABBITMQ_URL);

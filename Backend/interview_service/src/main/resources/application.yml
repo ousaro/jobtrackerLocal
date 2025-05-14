@@ -5,6 +5,10 @@ server:
 spring:
   application:
     name: interview-service
+
+  rabbitmq:
+    interview-queue: interview.index
+
   cloud:
     consul:
       host: localhost

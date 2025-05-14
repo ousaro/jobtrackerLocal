@@ -37,6 +37,28 @@ public class InterviewMapper {
             .build();
     }
 
+    public InterviewQueuePayload toContactQueuePayload(Interview interview){
+        InterviewQueueData data = new InterviewQueueData();
+        data.setId(interview.getId());
+        data.setCompanyName(interview.getCompanyName());
+        return InterviewQueuePayload.builder()
+                .action("create")
+                .data(data)
+                .build();
+
+    }
+
+    public InterviewQueuePayload toContactQueuePayload(String id){
+        InterviewQueueData data = new InterviewQueueData();
+        data.setId(id);
+        data.setCompanyName("");
+        return InterviewQueuePayload.builder()
+                .action("delete")
+                .data(data)
+                .build();
+
+    }
+
 
 }
 
