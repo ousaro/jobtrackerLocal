@@ -13,23 +13,45 @@ services:
       - mongo_data:/data/db
     networks:
       - jbt-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   mongo-express:
     image: mongo-express:1.0.2
     container_name: mongo-express
-    restart: always
+    restart: unless-stopped
     ports:
       - "8081:8081" 
     environment:
       ME_CONFIG_MONGODB_ADMINUSERNAME: oumeri
       ME_CONFIG_MONGODB_ADMINPASSWORD: PantryScanner2024 
       ME_CONFIG_MONGODB_SERVER: mongo
-      ME_CONFIG_SITE_ADMINUSERNAME: admin 
-      ME_CONFIG_SITE_ADMINPASSWORD: admin
     depends_on:
       - mongo
     networks:
       - jbt-network
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks:
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   user-service:
     build: .
@@ -38,7 +60,7 @@ services:
     environment:
       # Use the service name as the hostname not the container name
       MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo:27017/User-Service?authSource=admin
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672 # Use the service name as the hostname not localhost in the container
       USER_QUEUE: user.index
       PORT: 5001
     depends_on:
@@ -47,13 +69,6 @@ services:
     networks:
       - jbt-network
   
-  rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: rabbitmq
-    ports:
-      - "5672:5672"
-      - "15672:15672"
-
 networks:
   jbt-network:
     external: true
