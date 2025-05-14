@@ -1,11 +1,9 @@
 package com.jobtracker.contact_service.services;
 
 
+import com.jobtracker.contact_service.Utils.*;
 import org.springframework.stereotype.Service;
 
-import com.jobtracker.contact_service.Utils.ContactMapper;
-import com.jobtracker.contact_service.Utils.ContactRequest;
-import com.jobtracker.contact_service.Utils.ContactResponse;
 import com.jobtracker.contact_service.entities.Contact;
 import com.jobtracker.contact_service.repositories.ContactRepository;
 
@@ -23,10 +21,14 @@ public class ContactService {
 
     final private ContactRepository repository;
     final private ContactMapper mapper;
+    final private RabbitMQPublisher publisher;
 
     public ContactResponse createContact(ContactRequest request) {
-        Contact Contact = mapper.toContact(request);
-        return mapper.toContactResponse(repository.save(Contact));
+        Contact contact = mapper.toContact(request);
+        Contact savedContact = repository.save(contact);
+        ContactQueuePayload payload = mapper.toContactQueuePayload(savedContact);
+        publisher.publishToContactQueue(payload);
+        return mapper.toContactResponse(savedContact);
     }
 
     public List<ContactResponse> getAllContacts() {
@@ -72,9 +74,11 @@ public class ContactService {
             if (request.getWorkingAt() != null) {
                 contact.setWorkingAt(request.getWorkingAt());
             }
-            
+            Contact savedContact = repository.save(contact);
+            ContactQueuePayload payload = mapper.toContactQueuePayload(savedContact);
+            publisher.publishToContactQueue(payload);
             // Save and return the updated response
-            return mapper.toContactResponse(repository.save(contact));
+            return mapper.toContactResponse(savedContact);
         }
         return null;
     }
@@ -82,6 +86,8 @@ public class ContactService {
 
     public boolean deleteContact(String id) {
         if (repository.existsById(id)) {
+            ContactQueuePayload payload = mapper.toContactQueuePayload(id);
+            publisher.publishToContactQueue(payload);
             repository.deleteById(id);
             return true;
         }

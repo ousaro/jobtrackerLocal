@@ -3,8 +3,9 @@ const axios = require("axios");
 
 const highlightPerType = {
   users: ['fullName'],
-  contacts: ['fullName', 'phoneNumber'],
-  applications: ['company', 'description'],
+  contacts: ['fullName', 'phone'],
+  applications: ['position_title'],
+  interviews: ['companyName'],
 }
 
 const searchByType = async (req, res) => {
@@ -36,19 +37,22 @@ const searchByType = async (req, res) => {
 const reindexAll =  async (req, res) => {
   try {
     // Fetch from original services (you can secure these calls with service tokens)
-    const [usersRes, contactsRes, appsRes] = await Promise.all([
+    const [usersRes, contactsRes, appsRes,interviewsRes] = await Promise.all([
       axios.get('http://user-service/users'),
       axios.get('http://contact-service/contacts'),
-      axios.get('http://app-service/applications')
+      axios.get('http://app-service/applications'),
+      axios.get('http://interview-service/interviews')
     ]);
 
     const users = usersRes.data;
     const contacts = contactsRes.data;
     const apps = appsRes.data;
+    const interviews = interviewsRes.data;
 
     await getIndex('users').addDocuments(users);
     await getIndex('contacts').addDocuments(contacts);
     await getIndex('applications').addDocuments(apps);
+    await getIndex('interviews').addDocuments(interviews);
 
     res.json({ message: 'Reindexed all data successfully' });
   } catch (err) {

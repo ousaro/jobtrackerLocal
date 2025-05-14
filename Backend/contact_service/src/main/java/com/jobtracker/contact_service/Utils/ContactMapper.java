@@ -37,6 +37,30 @@ public class ContactMapper {
             .build();
     }
 
+    public ContactQueuePayload toContactQueuePayload(Contact contact){
+        ContactQueueData data = new ContactQueueData();
+        data.setId(contact.getId());
+        data.setFullName(contact.getName());
+        data.setPhoneNumber(contact.getPhone());
+        return ContactQueuePayload.builder()
+                .action("create")
+                .data(data)
+                .build();
+
+    }
+
+    public ContactQueuePayload toContactQueuePayload(String id){
+        ContactQueueData data = new ContactQueueData();
+        data.setId(id);
+        data.setFullName("");
+        data.setPhoneNumber("");
+        return ContactQueuePayload.builder()
+                .action("delete")
+                .data(data)
+                .build();
+
+    }
+
 
 }
 

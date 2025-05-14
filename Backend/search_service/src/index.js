@@ -26,7 +26,7 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use("/search",authMiddleware, searchRoutes);
+app.use("/search", searchRoutes);
 app.use("/", healthRouter);
 
 app.listen(PORT, async () => {

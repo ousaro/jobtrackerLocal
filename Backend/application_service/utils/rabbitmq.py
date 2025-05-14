@@ -16,4 +16,22 @@ def publish_event(event, payload):
             delivery_mode=2,  # makes message persistent
         )
     )
+    print(f" [x] Sent {payload} to {event}")
+    connection.close()
+
+def publish_to_app_queue(payload):
+    params = pika.URLParameters(settings.RABBITMQ_URL)
+    connection = pika.BlockingConnection(params)
+    channel = connection.channel()
+    channel.queue_declare(queue=settings.APP_QUEUE, durable=True)
+
+    channel.basic_publish(
+        exchange='',  # Default exchange, sends directly to queue
+        routing_key=settings.APP_QUEUE,  # Queue name
+        body=json.dumps(payload),
+        properties=pika.BasicProperties(
+            delivery_mode=2,  # Persistent message
+        )
+    )
+    print(f" [x] Sent {payload} to {settings.APP_QUEUE}")
     connection.close()

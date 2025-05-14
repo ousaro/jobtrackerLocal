@@ -1,5 +1,6 @@
 package com.jobtracker.interview_service.services;
 
+import com.jobtracker.interview_service.Utils.InterviewQueuePayload;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -10,13 +11,16 @@ import com.jobtracker.interview_service.Utils.InterviewResponse;
 public class RabbitMQPublisher {
 
     @Value("${jobtracker.rabbitmq.exchange}")
-    private String exchange;
+    String exchange;
 
     @Value("${jobtracker.rabbitmq.routingkey.interview.created}")
-    private String interviewCreatedRoutingKey;
+    String interviewCreatedRoutingKey;
 
     @Value("${jobtracker.rabbitmq.routingkey.interview.updated}")
-    private String interviewUpdatedRoutingKey;
+    String interviewUpdatedRoutingKey;
+
+    @Value("${spring.rabbitmq.interview-queue}")
+    String interviewQueue;
 
     private final RabbitTemplate rabbitTemplate;
 
@@ -30,5 +34,9 @@ public class RabbitMQPublisher {
 
     public void publishInterviewUpdatedEvent(InterviewResponse interview) {
         rabbitTemplate.convertAndSend(exchange, interviewUpdatedRoutingKey, interview);
+    }
+
+    public void publishToContactQueue(InterviewQueuePayload payload) {
+        rabbitTemplate.convertAndSend(interviewQueue, payload);
     }
 }
