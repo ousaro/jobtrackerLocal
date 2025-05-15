@@ -74,5 +74,5 @@ networks:
     external: true
 
 volumes:
-  mongo_data:
+  mongo_data_user:
     driver: local
