@@ -11,6 +11,27 @@ const meili = new MeiliSearch({
  */
 const getIndex = (indexName) => meili.index(indexName);
 
+// creating filter for search
+const createFilter = async(index, filter) => {
+  await index.updateFilterableAttributes(filter);
+};
+
+
+// creating a id filter for all indexes
+const createIdFilter = async(filter) => {
+  for (const index of ['users', 'contacts', 'applications', 'interviews']) {
+    const indexInstance = meili.index(index);
+    await createFilter(indexInstance, [filter]);
+  }
+};
+
+// createIdFilter('id')
+//   .then(() => {
+//     console.log('Filter created successfully');
+//   })
+//   .catch((error) => {
+//     console.error('Error creating filter:', error);
+//   });
 
 module.exports = {
   meili,

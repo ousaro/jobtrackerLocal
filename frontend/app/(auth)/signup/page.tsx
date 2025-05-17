@@ -8,9 +8,8 @@ import { Label } from '../../../components/ui/label';
 import { Briefcase } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '../../../hooks/use-toast';
-import { register, rollback } from '../../../api/authApi/authApi';
+import { register } from '../../../api/authApi/authApi';
 import { withGuest } from '../../../components/withAuth';
-import { addProfile } from '../../../api/userApi/userApi';
 import { useAuth } from '../../../context/AuthContext';
 import { AuthResponse, RegisterRequest, User } from '../../types';
 
@@ -24,54 +23,25 @@ function SignUpPage() {
   const { toast } = useToast();
   const { login, logout } = useAuth();
 
-  const createUser = async (response: AuthResponse) : Promise<{success: boolean, userData?: any}> => {
-    try {
-      const user = {
-        fullName: response?.fullName,
-        email: response?.email,
-        phone: response?.phone,
-      }
-
-      const userData = await addProfile(user);
-      toast({
-        title: 'Success',
-        description: "User added successfully !", 
-        variant: 'default',
-      });
-      return { success: true, userData };
-    }catch(error:any){
-      toast({
-        title: 'Error',
-        description: error.message,
-        variant: 'destructive',
-      });
-      return { success: false };
-    }
-  }
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     try {
           const request : RegisterRequest = {fullName, email, password, confirmPassword, phone: phoneNumber}
           const response = await register(request);
+         
+          login(response.token, {
+              id: response.profile._id,
+              fullName: response.profile.fullName,
+              email: response.profile.email,
+              phone: response.profile.phone
+            });
+
           toast({
             title: 'Success',
             description: 'Successfully registered !',
           });
 
-          const { success, userData } = await createUser(response);
-          if(success && userData){
-            login(response.token, {
-              id: userData.id,
-              fullName: userData.fullName,
-              email: userData.email,
-              phone: userData.phone
-            });
-          }else{
-            await rollback();
-            logout();
-          }
           
     } catch (error : any) {
           toast({

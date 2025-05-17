@@ -17,13 +17,13 @@ spring:
     profile-service:
       name: user-service
       url: http://${spring.services.profile-service.name}/users/profile/
-      
+
   cloud:
     consul:
       host: localhost
       port: 8500
       discovery:
-        hostname: 10.1.1.69 # host.docker.internal
+        hostname: 10.5.18.49 # host.docker.internal
         port: ${server.port}
         register: true
         health-check-path: /health

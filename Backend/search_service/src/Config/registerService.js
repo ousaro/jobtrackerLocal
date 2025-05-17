@@ -7,8 +7,8 @@ const {
   PORT = 5009,
   CONSUL_HOST = 'localhost',
   CONSUL_PORT = 8500,
-  SERVICE_ID = 'search_service',
-  SERVICE_NAME = 'search_service'
+  SERVICE_ID = 'search-service',
+  SERVICE_NAME = 'search-service'
 } = process.env;
 
 const consul = new Consul({

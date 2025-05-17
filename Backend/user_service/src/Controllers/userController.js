@@ -80,7 +80,7 @@ const addProfile = async(req, res) => {;
             email,
             phone
         })
-        await user.save();
+        const savedUser = await user.save();
         const data = {id: user._id, fullName};
          try {
             await publishProfileAction(process.env.USER_QUEUE, 'create', data);
@@ -89,7 +89,7 @@ const addProfile = async(req, res) => {;
             await User.deleteOne({ _id: user._id }); 
             return res.status(500).json({ message: "Failed to notify search service. User rolled back." });
         }
-        res.status(201).json({message: "User profile created successfully", data});
+        res.status(201).json(savedUser);
     }
     catch(e) {
         if (e.code === 11000) {

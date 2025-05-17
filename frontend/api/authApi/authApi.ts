@@ -1,8 +1,9 @@
 import { authClient } from '../../utils/appClient';
 import { LoginRequest, RegisterRequest, AuthResponse, UserProfile } from '../../app/types';
 import { AxiosError } from 'axios';
+import { Services } from '../../constants/services';
 
-const API_URL = 'http://localhost:8080/api/auth';
+const API_URL = `${process.env.NEXT_PUBLIC_API_URL}/${Services.AUTH}` || `http://localhost:8000/api/${Services.AUTH}`;
 const authApi = authClient(API_URL);
 
 const mockUser = {_id: '',email: '',fullName: '',phone: ''}
@@ -10,9 +11,9 @@ const mockUser = {_id: '',email: '',fullName: '',phone: ''}
 // Login function
 export const login = async (request: LoginRequest): Promise<AuthResponse> => {
     try {
-        const response = await authApi.post<AuthResponse>('/login', request);
+        const response = await authApi.post<AuthResponse>(`/${Services.AUTH_LOGIN}`, request);
         localStorage.setItem('token', response.data.token);
-        return {...mockUser , token : response.data.token};
+        return response.data;
     } catch (error) {
         const axiosError = error as AxiosError<{ message: string }>;
         throw new Error(axiosError.response?.data?.message || 'Login failed');
@@ -32,7 +33,7 @@ export const register = async (request: RegisterRequest): Promise<AuthResponse> 
     }
 
     try {
-        const response = await authApi.post<AuthResponse>('/register', request);
+        const response = await authApi.post<AuthResponse>(`/${Services.AUTH_REGISTER}`, request);
         localStorage.setItem('token', response.data.token);
         return response.data;
     } catch (error) {
@@ -41,12 +42,3 @@ export const register = async (request: RegisterRequest): Promise<AuthResponse> 
     }
 };
 
-export const rollback = async (): Promise<string> => {
-    try {
-        const response = await authApi.get<{ message: string }>('/rollback');
-        return response.data.message;
-    } catch (error) {
-        const axiosError = error as AxiosError<{ message: string }>;
-        throw new Error(axiosError.response?.data?.message || 'Rollback failed');
-    }
-};
