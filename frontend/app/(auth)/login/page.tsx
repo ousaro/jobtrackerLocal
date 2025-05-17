@@ -11,8 +11,6 @@ import { login as loginApi } from "./../../../api/authApi/authApi";
 import { useToast } from '../../../hooks/use-toast';
 import { withGuest } from '../../../components/withAuth';
 import { useAuth } from '../../../context/AuthContext';
-import { getProfileByEmail } from '../../../api/userApi/userApi';
-import { getTokenClaims } from '../../../utils/tokenService';
 import { LoginRequest } from '../../types';
 
 function LoginPage() {
@@ -30,16 +28,12 @@ function LoginPage() {
       const request : LoginRequest = {email, password};
       const response = await loginApi(request);
       
-      // Get user profile data
-      const {sub : userEmail} = getTokenClaims();
-      const userProfile = await getProfileByEmail(userEmail);
-      
       // Login with the auth context
       login(response.token, {
-        id: userProfile._id,
-        fullName: userProfile.fullName,
-        email: userProfile.email,
-        phone: userProfile.phone
+        id: response.profile._id,
+        fullName: response.profile.fullName,
+        email: response.profile.email,
+        phone: response.profile.phone
       });
 
       toast({

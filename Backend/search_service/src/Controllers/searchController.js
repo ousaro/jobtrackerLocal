@@ -33,6 +33,34 @@ const searchByType = async (req, res) => {
     }
 }
 
+const searchByTypeWithId = async (req, res) => {
+  const { type, id } = req.params; // users, contacts, applications
+  console.log(`[🔍] Searching ${type} with ID: ${id}`);
+  const query = req.query.q || '';
+  try {
+    const index = getIndex(type);
+    const result = await index.search(query, {
+      limit: 10,
+      attributesToHighlight: highlightPerType[type], // adjust per type
+      filter: `id = "${id}"`
+    });
+
+    
+
+    const hits = result.hits.map(hit => ({
+      id: hit.id,
+      _score: hit._rankingScore,
+      highlight: hit._formatted,
+    }));
+
+    console.log(`[✅] Search result for ${type}:`, result.hits);
+
+    res.json(hits);
+  } catch (err) {
+    console.error(`[❌] Search error on ${type}:`, err.message);
+    res.status(500).json({ error: 'Search failed' });
+  }
+}
 
 const reindexAll =  async (req, res) => {
   try {
@@ -79,6 +107,7 @@ const deleteDocument = async (req, res) => {
 
 module.exports = {
     searchByType,
+    searchByTypeWithId,
     reindexAll,
     deleteDocument
 }

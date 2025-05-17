@@ -1,5 +1,6 @@
 package com.jobtracker.auth_service.services;
 
+import com.jobtracker.auth_service.utils.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -10,12 +11,6 @@ import org.springframework.web.client.RestTemplate;
 
 import com.jobtracker.auth_service.entities.User;
 import com.jobtracker.auth_service.repositories.UserRepository;
-import com.jobtracker.auth_service.utils.LoginRequest;
-import com.jobtracker.auth_service.utils.LoginResponse;
-import com.jobtracker.auth_service.utils.ProfileRequest;
-import com.jobtracker.auth_service.utils.ProfileResponse;
-import com.jobtracker.auth_service.utils.RegisterRequest;
-import com.jobtracker.auth_service.utils.RegisterResponse;
 
 import lombok.RequiredArgsConstructor;
 
@@ -71,17 +66,12 @@ public class AuthService {
             // Send the request to the Profile Service
             ResponseEntity<ProfileResponse> response = restTemplate.postForEntity(profileServiceUrl, profileRequest, ProfileResponse.class);
 
-
-
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("Profile creation failed");
             }
 
             // If Profile Service is successful, issue token
             RegisterResponse registerResponse = new RegisterResponse();
-            registerResponse.setEmail(user.getEmail());
-            registerResponse.setFullName(user.getFullName());
-            registerResponse.setPhone(request.getPhone());
             registerResponse.setToken(tokenService.generateToken(user.getEmail()));
             registerResponse.setProfile(response.getBody());
 
@@ -107,11 +97,34 @@ public class AuthService {
         // Generate token
         String token = tokenService.generateToken(user.getEmail());
 
-        // Prepare response
-        LoginResponse loginResponse = new LoginResponse();
-        loginResponse.setToken(token);
+        //Call Profile Service to create or update profile
+        try {
 
-        return loginResponse;
+
+            if(!isServiceAvailable(profileServiceName)) throw new RuntimeException("No such service found");
+
+            ResponseEntity<ProfileResponse> response = restTemplate.getForEntity(profileServiceUrl+"/email/" +user.getEmail(), ProfileResponse.class);
+            // Send the request to the Profile Service
+
+
+
+            if (!response.getStatusCode().is2xxSuccessful()) {
+                throw new RuntimeException("Profile creation failed");
+            }
+
+
+
+            // Prepare response
+            LoginResponse loginResponse = new LoginResponse();
+            loginResponse.setToken(token);
+            loginResponse.setProfile(response.getBody());
+
+            return loginResponse;
+
+        } catch (Exception e) {
+            throw new RuntimeException("User login failed: " + e.getMessage());
+        }
+
     }
 
     public String delete(String email) {

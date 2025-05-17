@@ -7,9 +7,6 @@ import lombok.Setter;
 @Setter
 public class RegisterResponse {
 
-    private String email;
-    private String fullName;
-    private String phone;
     private String token;
     private ProfileResponse profile;
 }

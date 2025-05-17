@@ -1,3 +1,5 @@
+import { UserProfile } from "./profile";
+
 // Auth Request Types
 export interface LoginRequest {
   email: string;
@@ -15,11 +17,8 @@ export interface RegisterRequest {
 
 // Auth Response Types
 export interface AuthResponse {
-  _id: string;
-  email: string;
-  fullName: string;
-  phone:string;
   token: string;
+  profile: UserProfile;
 }
 
 export interface User {

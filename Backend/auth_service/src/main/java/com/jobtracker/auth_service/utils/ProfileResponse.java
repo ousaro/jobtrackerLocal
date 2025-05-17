@@ -6,6 +6,11 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ProfileResponse {
-    private String message;
-    private ProfileData data;
+
+    private String _id;
+    private String fullName;
+    private String email;
+    private String phone;
+    private String createdAt;
+    private String updatedAt;
 }
