@@ -1,5 +1,6 @@
 server:
-  port: 5000
+  port: 8080 
+  address: 0.0.0.0 # To make it accessible from outside the container
 
 
 spring:
@@ -20,7 +21,7 @@ spring:
       
   cloud:
     consul:
-      host: localhost
+      host: consul # The name of the Consul service in Docker Compose
       port: 8500
       discovery:
         hostname: 10.1.1.69 # host.docker.internal

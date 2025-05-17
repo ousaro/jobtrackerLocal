@@ -1,32 +1,42 @@
 version: '3.8'
 
 services:
-  db:
+  postgres:
     image: postgres:16
     container_name: postgres-db
-    restart: always
+    restart: unless-stopped
     environment:
       POSTGRES_DB: auth
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: root
     volumes:
-      - pgdata:/var/lib/postgresql/data
+      - postgres_data_auth:/var/lib/postgresql/data
     ports:
       - "5432:5432"
+    networks:
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   auth-service:
     build: .
     container_name: auth-service
     depends_on:
-      - db
+      - postgres
     ports:
       - "5000:8080" # internal port 8080 mapped to external port 5000
     environment:
-      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/auth
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/auth
       SPRING_DATASOURCE_USERNAME: postgres
       SPRING_DATASOURCE_PASSWORD: root
       SPRING_DATASOURCE_DRIVER_CLASS_NAME: org.postgresql.Driver
-    restart: always
+      SPRING_CLOUD_CONSUL_ENABLED: "false" # To disable Consul for dev
+    restart: unless-stopped
+    networks:
+      - jbt-network
     
   pgadmin:
     image: dpage/pgadmin4
@@ -38,9 +48,14 @@ services:
     ports:
       - "5050:80"
     depends_on:
-      - db
+      - postgres
+    networks:
+      - jbt-network
 
-  
+networks:
+  jbt-network:
+    external: true
 
 volumes:
-  pgdata:
+  postgres_data_auth:  # Define the named volume
+    driver: local

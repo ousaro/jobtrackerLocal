@@ -10,7 +10,7 @@ services:
       MONGO_INITDB_ROOT_USERNAME: oumeri
       MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
     volumes:
-      - mongo_data:/data/db
+      - mongo_data_user:/data/db
     networks:
       - jbt-network
     healthcheck:

@@ -6,19 +6,20 @@ WORKDIR /app
 
 # Step 3: Copy the pom.xml file and download dependencies (for caching)
 COPY pom.xml .
+
 RUN mvn dependency:go-offline
 
 # Step 4: Copy the source code
-COPY src /app/src
+COPY . .
 
 # Step 5: Build the application
 RUN mvn clean package -DskipTests
 
 # Step 6: Create a lightweight runtime image
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre-alpine
 
 # Step 7: Copy the JAR from the previous build stage
-COPY --from=build /app/target/auth-service-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/*.jar app.jar
 
 # Step 8: Expose the port
 EXPOSE 8080
