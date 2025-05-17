@@ -1,0 +1,46 @@
+# Maven & Gradle build output
+target/
+build/
+out/
+
+# Logs
+*.log
+
+# Temporary files and caches
+*.tmp
+*.swp
+*.swo
+*.bak
+
+# IntelliJ, Eclipse, VSCode, NetBeans, etc.
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+*.class
+*.project
+*.classpath
+.settings/
+nbproject/
+*.DS_Store
+
+# GIT and version control stuff
+.git/
+.gitignore
+.gitattributes
+
+# OS-generated files
+Thumbs.db
+.DS_Store
+
+# Docker
+Dockerfile
+docker-compose*.yml
+
+# Other
+*.jar
+*.war
+
+# Node/npm
+node_modules/

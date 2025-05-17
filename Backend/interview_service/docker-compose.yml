@@ -3,14 +3,14 @@ version: '3.8'
 services:
   mongo:
     image: mongo:6
-    container_name: mongo-user
+    container_name: mongo-interviews
     ports:
       - "27017:27017"
     environment:
       MONGO_INITDB_ROOT_USERNAME: oumeri
       MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
     volumes:
-      - mongo_data_user:/data/db
+      - mongo_data_interviews:/data/db
     networks:
       - jbt-network
     healthcheck:
@@ -19,10 +19,10 @@ services:
       timeout: 5s
       retries: 3
       start_period: 20s
-
+  
   mongo-express:
     image: mongo-express:1.0.2
-    container_name: mongo-express-user
+    container_name: mongo-express-inetrviews
     restart: unless-stopped
     ports:
       - "8081:8081" 
@@ -37,11 +37,11 @@ services:
       - jbt-network
 
   rabbitmq:
-    image: rabbitmq:3-management-alpine
-    container_name: rabbitmq
+    image: rabbitmq:3-management
     ports:
       - "5672:5672"
-      - "15672:15672"
+      - "15672:15672" # Management UI
+    container_name: rabbitmq
     environment:
       RABBITMQ_DEFAULT_USER: guest
       RABBITMQ_DEFAULT_PASS: guest
@@ -54,26 +54,28 @@ services:
       retries: 3
       start_period: 20s
 
-  user-service:
+  interview-service:
     build: .
     ports:
-      - "5001:5001"
-    environment:
-      # Use the service name as the hostname not the container name
-      MONGO_URI: mongodb://oumeri:PantryScanner2024@mongo:27017/User-Service?authSource=admin
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672 # Use the service name as the hostname not localhost in the container
-      USER_QUEUE: user.index
-      PORT: 5001
+      - "5003:5003"
     depends_on:
       - mongo
       - rabbitmq
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://oumeri:PantryScanner2024@mongo:27017/InterviewService?authSource=admin
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_CLOUD_CONSUL_ENABLED: "false" # To disable Consul for dev
+    restart: unless-stopped
     networks:
       - jbt-network
-  
+
 networks:
   jbt-network:
     external: true
 
 volumes:
-  mongo_data_user:
+  mongo_data_interviews:  # Define the named volume
     driver: local
