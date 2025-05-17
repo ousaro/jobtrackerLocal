@@ -24,5 +24,8 @@ COPY --from=builder /app /app
 # Expose the desired port
 EXPOSE 5009
 
+# Run the application as a non-root user
+USER node
+
 # Use exec form and specify the default command
 CMD ["npm", "start"]

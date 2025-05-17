@@ -1,49 +1,60 @@
-version: '3.8'
-
 services:
   meilisearch:
-    image: getmeili/meilisearch:v1.7
+    image: getmeili/meilisearch:v1.13.3
     ports:
       - "7700:7700"
     environment:
-      - MEILI_MASTER_KEY=masterKey
+      MEILI_MASTER_KEY: masterKey
     volumes:
       - meili_data:/meili_data  # Persistent volume
     networks:
-      - shared-network
-
-      
+      - jbt-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   rabbitmq:
-    image: rabbitmq:3-management
+    image: rabbitmq:3-management-alpine
+    container_name: rabbitmq
     ports:
       - "5672:5672"
-      - "15672:15672" # Management UI
-    hostname: rabbitmq
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
     networks:
-      - shared-network
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
-  # search-service:
-  #   build: .
-  #   ports:
-  #     - "5009:5009"
-  #   depends_on:
-  #     - meilisearch
-  #     - rabbitmq
-  #   environment:
-  #     - MEILI_HOST=http://meilisearch:7700
-  #     - MEILI_KEY=masterKey
-  #     - RABBITMQ_URL=amqp://rabbitmq:5672
-  #     - USER_QUEUE=user.index
-  #     - CONTACT_QUEUE=contact.index
-  #     - APP_QUEUE=application.index
-  #     - PORT=5000
-  #   restart: always
-  #   networks:
-  #     - shared-network
+  search-service:
+    build: .
+    ports:
+      - "5009:5009"
+    environment:
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_KEY: masterKey
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      USER_QUEUE: user.index
+      CONTACT_QUEUE: contact.index
+      APP_QUEUE: application.index
+      PORT: 5009
+    restart: unless-stopped
+    depends_on:
+      - meilisearch
+      - rabbitmq
+    networks:
+      - jbt-network
 
 networks:
-  shared-network:
+  jbt-network:
     external: true
 
 volumes:
