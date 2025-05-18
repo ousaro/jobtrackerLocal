@@ -9,7 +9,7 @@ const highlightPerType = {
 }
 
 const searchByType = async (req, res) => {
-    const { type } = req.params; // users, contacts, applications
+    const { type } = req.params; // users, contacts, applications, interviews
     const query = req.query.q || '';
     try {
       const index = getIndex(type);

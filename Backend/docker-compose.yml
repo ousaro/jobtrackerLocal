@@ -1,0 +1,290 @@
+version: '3.8'
+services:
+  # Shared infrastructure
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    networks: 
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  consul:
+    image: consul:1.15
+    ports:
+      - "8500:8500"
+    networks: 
+      - jbt-network
+    command: agent -dev -client=0.0.0.0
+
+  # Auth Service (using PostgresDB)
+  auth-db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: authdb
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    ports:
+      - "5432:5432"
+    networks: 
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build: ./Auth_Service
+    depends_on:
+      - auth-db
+      - rabbitmq
+      - consul
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authdb
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: root
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_CLOUD_CONSUL_HOST: consul
+    ports:
+      - "5000:8080"
+    networks: 
+      - jbt-network
+
+  # pgAdmin to manage all Postgres DBs
+  pgadmin:
+    image: dpage/pgadmin4
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@example.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    depends_on:
+      - auth-db
+    networks:  
+      - jbt-network
+
+  # User Service (using MongoDB)
+  user-db:
+    image: mongo:6
+    container_name: user-db
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: oumeri
+      MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
+    volumes:
+      - userdb_data:/data/db
+    networks:
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  mongo-express-user:
+    image: mongo-express:1.0.2
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: oumeri
+      ME_CONFIG_MONGODB_ADMINPASSWORD: PantryScanner2024
+      ME_CONFIG_MONGODB_SERVER: user-db
+    depends_on:
+      - user-db
+    networks: 
+      - jbt-network
+
+
+  user-service:
+    build: ./User_Service
+    ports:
+      - "5001:5001"
+    environment:
+      # Use the service name as the hostname not the container name
+      MONGO_URI: mongodb://oumeri:PantryScanner2024@user-db:27017/Users?authSource=admin
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672 # Use the service name as the hostname not localhost in the container
+      USER_QUEUE: user.index
+      CONSUL_HOST: consul
+      PORT: 5001
+    depends_on:
+      - user-db
+      - rabbitmq
+      - consul
+    networks:
+      - jbt-network
+  
+
+  # Contact Service (using MongoDB)
+  contact-db:
+    image: mongo:6
+    container_name: contact-db
+    ports:
+      - "27018:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: oumeri
+      MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
+    volumes:
+      - contactdb_data:/data/db
+    networks:
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  mongo-express-contact:
+    image: mongo-express:1.0.2
+    container_name: mongo-express-contact
+    restart: unless-stopped
+    ports:
+      - "8082:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: oumeri
+      ME_CONFIG_MONGODB_ADMINPASSWORD: PantryScanner2024
+      ME_CONFIG_MONGODB_SERVER: contact-db
+    depends_on:
+      - contact-db
+    networks:
+      - jbt-network
+
+  contact-service:
+    build: ./contact_service
+    ports:
+      - "5004:5004"
+    depends_on:
+      - contact-db
+      - rabbitmq
+      - consul
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://oumeri:PantryScanner2024@contact-db:27017/Contacts?authSource=admin
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_CLOUD_CONSUL_HOST: consul
+    restart: unless-stopped
+    networks:
+      - jbt-network
+  
+  # Search Service
+  meilisearch:
+    image: getmeili/meilisearch:v1.13.3
+    ports:
+      - "7700:7700"
+    environment:
+      MEILI_MASTER_KEY: masterKey
+    volumes:
+      - meili_data:/meili_data  # Persistent volume
+    networks:
+      - jbt-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  search-service:
+    build: ./search_service
+    ports:
+      - "5009:5009"
+    environment:
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_KEY: masterKey
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      USER_QUEUE: user.index
+      CONTACT_QUEUE: contact.index
+      APP_QUEUE: application.index
+      PORT: 5009
+      CONSUL_HOST: consul
+    restart: unless-stopped
+    depends_on:
+      - meilisearch
+      - rabbitmq
+      - consul
+    networks:
+      - jbt-network
+
+  # Interview Service (using MongoDB)
+  interview-db:
+    image: mongo:6
+    container_name: interview-db
+    ports:
+      - "27019:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: oumeri
+      MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
+    volumes:
+      - interviewdb_data:/data/db
+    networks:
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+  
+  mongo-express-interview:
+    image: mongo-express:1.0.2
+    container_name: mongo-express-interview
+    restart: unless-stopped
+    ports:
+      - "8083:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: oumeri
+      ME_CONFIG_MONGODB_ADMINPASSWORD: PantryScanner2024
+      ME_CONFIG_MONGODB_SERVER: interview-db
+    depends_on:
+      - interview-db
+    networks:
+      - jbt-network
+
+  interview-service:
+    build: ./interview_service
+    ports:
+      - "5003:5003"
+    depends_on:
+      - interview-db
+      - rabbitmq
+      - consul
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://oumeri:PantryScanner2024@interview-db:27017/Interviews?authSource=admin
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: guest
+      SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_CLOUD_CONSUL_HOST: consul
+    restart: unless-stopped
+    networks:
+      - jbt-network
+
+
+networks:
+  jbt-network:
+    external: true
+
+volumes:
+  userdb_data:
+  contactdb_data:
+  interviewdb_data:
+  authdb_data:
+  pgadmin_data:
+  meili_data:

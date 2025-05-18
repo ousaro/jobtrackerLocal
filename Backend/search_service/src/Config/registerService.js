@@ -3,9 +3,9 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 const {
-  SERVICE_HOST = 'host.docker.internal',
+  SERVICE_HOST = 'search-service',
   PORT = 5009,
-  CONSUL_HOST = 'localhost',
+  CONSUL_HOST = 'consul',
   CONSUL_PORT = 8500,
   SERVICE_ID = 'search-service',
   SERVICE_NAME = 'search-service'
