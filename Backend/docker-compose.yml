@@ -120,6 +120,7 @@ services:
       RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672 # Use the service name as the hostname not localhost in the container
       USER_QUEUE: user.index
       CONSUL_HOST: consul
+      SERVICE_HOST: user-service
       PORT: 5001
     depends_on:
       - user-db
