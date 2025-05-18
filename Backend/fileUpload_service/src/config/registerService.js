@@ -17,7 +17,9 @@ const consul = new Consul({
   promisify: true
 });
 
+
 const registerService = async () => {
+  const serviceAddress = getContainerIPAddress(); // dynamically get IP
   try {
     await consul.agent.service.register({
       id: SERVICE_ID,

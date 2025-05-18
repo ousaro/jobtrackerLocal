@@ -17,6 +17,8 @@ const consul = new Consul({
   promisify: true
 });
 
+
+
 const registerService = async () => {
   try {
     await consul.agent.service.register({

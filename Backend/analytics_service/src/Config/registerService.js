@@ -18,6 +18,7 @@ const consul = new Consul({
 });
 
 const registerService = async () => {
+  
   try {
     await consul.agent.service.register({
       id: SERVICE_ID,
