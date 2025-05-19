@@ -1,6 +1,6 @@
 server:
   port: 5003
-  address: 0.0.0.0
+  # address: 0.0.0.0
 
 
 spring:
@@ -12,10 +12,10 @@ spring:
 
   cloud:
     consul:
-      host: consul
+      host: localhost
       port: 8500
       discovery:
-        hostname: interview-service
+        hostname: localhost
         port: ${server.port}
         register: true
         health-check-path: /health

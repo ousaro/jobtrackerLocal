@@ -1,7 +1,7 @@
 server:
   port: 8080 
-  address: 0.0.0.0 # To make it accessible from outside the container
-
+  # To make it accessible from outside the container
+  # address: 0.0.0.0 
 
 spring:
   security:
@@ -21,10 +21,10 @@ spring:
 
   cloud:
     consul:
-      host: consul # The name of the Consul service in Docker Compose
+      host: localhost
       port: 8500
       discovery:
-        hostname: auth-service 
+        hostname: localhost 
         port: ${server.port}
         register: true
         health-check-path: /health
