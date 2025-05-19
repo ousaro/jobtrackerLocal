@@ -11,6 +11,7 @@ import com.jobtracker.contact_service.repositories.ContactRepository;
 import lombok.RequiredArgsConstructor;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.Optional;
 
@@ -38,9 +39,18 @@ public class ContactService {
                 .map(mapper::toContactResponse)
                 .collect(Collectors.toList());
         // Filter out null values from the list
-        contactResponses.removeIf(contactResponse -> contactResponse == null);
+        contactResponses.removeIf(Objects::isNull);
         return contactResponses;
        
+    }
+
+    public List<ContactResponse> getContactByIds(List<String> ids) {
+        List<Contact> contacts = repository.findAllById(ids);
+
+        // Map Contact entity to ContactResponse DTO
+        return contacts.stream()
+                .map(mapper::toContactResponse)
+                .collect(Collectors.toList());
     }
 
     public ContactResponse getContactById(String id) {

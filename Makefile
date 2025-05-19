@@ -38,6 +38,12 @@ up: frontend-up auth-up user-up search-up
 # Stop all services
 down: frontend-down auth-down user-down search-down
 
+# Main services up
+main-up:
+	docker-compose -f ./backend/Search_Service/docker-compose.yml up -d
+	docker-compose up -d
+	cd ./Frontend && npm run dev
+
 # Logs for all services
 logs:
 	docker-compose -f frontend/docker-compose.yml logs -f &

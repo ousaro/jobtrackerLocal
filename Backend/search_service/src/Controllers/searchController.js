@@ -13,6 +13,7 @@ const searchByType = async (req, res) => {
     const query = req.query.q || '';
     try {
       const index = getIndex(type);
+      
       const result = await index.search(query, {
         limit: 10,
         attributesToHighlight: highlightPerType[type], // adjust per type

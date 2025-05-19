@@ -15,7 +15,7 @@ spring:
       host: localhost
       port: 8500
       discovery:
-        hostname: localhost
+        hostname: 10.5.18.49 #host.docker.internal
         port: ${server.port}
         register: true
         health-check-path: /health

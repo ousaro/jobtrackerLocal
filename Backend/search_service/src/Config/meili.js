@@ -25,6 +25,25 @@ const createIdFilter = async(filter) => {
   }
 };
 
+const deleteIndex = async (indexName) => {
+  const index = meili.index(indexName);
+  await index.delete();
+};
+
+(async () => {
+  for(const index of ['users','contacts','applications','interviews']){
+     meili.createIndex(index).then((index) => {
+      console.log(`Index ${index} created successfully`)     
+    })
+    .catch((error)=>{
+      console.error(`Error creating index ${index}:`, error)
+    })
+  }
+
+})();
+
+//deleteIndex('contacts')
+
 // createIdFilter('id')
 //   .then(() => {
 //     console.log('Filter created successfully');

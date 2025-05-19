@@ -36,6 +36,11 @@ public class ContactController {
         return ResponseEntity.ok(service.getAllContacts());
     }
 
+    @PostMapping("/ids")
+    public ResponseEntity<List<ContactResponse>> getContactsByIds(@RequestBody List<String> ids) {
+        return ResponseEntity.ok(service.getContactByIds(ids));
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<ContactResponse> findById(@PathVariable String id) {
         ContactResponse res = service.getContactById(id);

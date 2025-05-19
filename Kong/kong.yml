@@ -22,86 +22,86 @@ services:
     routes:
       - name: auth-service-route
         paths:
-          - /api/auth_service
+          - /api/auth-service
   
-  - name: user_service
+  - name: user-service
     url: http://host.docker.internal:5001  # http://user_service.service.consul:5001
     routes:
-      - name: user_service-route
+      - name: user-service-route
         paths:
-          - /api/user_service
+          - /api/user-service
     plugins:
       - name: jwt
     
-  - name: application_service
+  - name: application-service
     url: http://host.docker.internal:5002  # http://application_service.service.consul:5002
     routes:
-      - name: application_service-route
+      - name: application-service-route
         paths:
-          - /api/application_service
+          - /api/application-service
     plugins:
       - name: jwt
 
-  - name: interview_service
+  - name: interview-service
     url: http://host.docker.internal:5003  # http://interview_service.service.consul:5003
     routes:
-      - name: interview_service-route
+      - name: interview-service-route
         paths:
-          - /api/interview_service
+          - /api/interview-service
     plugins:
       - name: jwt
 
-  - name: contact_service
+  - name: contact-service
     url: http://host.docker.internal:5004  # http://contact_service.service.consul:5004
     routes:
-      - name: contact_service-route
+      - name: contact-service-route
         paths:
-          - /api/contact_service
-    plugins:
-      - name: jwt
-    
-  - name: analytics_service
-    url: http://host.docker.internal:5005  # http://analytics_service.service.consul:5005
-    routes:
-      - name: analytics_service-route
-        paths:
-          - /api/analytics_service
-    plugins:
-      - name: jwt
-  
-  - name: dashboard_service
-    url: http://host.docker.internal:5006  # http://dashboard_service.service.consul:5006
-    routes:
-      - name: dashboard_service-route
-        paths:
-          - /api/dashboard_service
+          - /api/contact-service
     plugins:
       - name: jwt
 
-  - name: fileUpload_service
+  - name: analytics-service
+    url: http://host.docker.internal:5005  # http://analytics_service.service.consul:5005
+    routes:
+      - name: analytics-service-route
+        paths:
+          - /api/analytics-service
+    plugins:
+      - name: jwt
+
+  - name: dashboard-service
+    url: http://host.docker.internal:5006  # http://dashboard_service.service.consul:5006
+    routes:
+      - name: dashboard-service-route
+        paths:
+          - /api/dashboard-service
+    plugins:
+      - name: jwt
+
+  - name: fileupload-service
     url: http://host.docker.internal:5007  # http://fileupload_service.service.consul:5007
     routes:
-      - name: fileupload_service-route
+      - name: fileupload-service-route
         paths:
-          - /api/fileupload_service
+          - /api/fileupload-service
     plugins:
       - name: jwt
-  
-  - name: notification_service
+
+  - name: notification-service
     url: http://host.docker.internal:5008  # http://notification_service.service.consul:5008
     routes:
-      - name: notification_service-route
+      - name: notification-service-route
         paths:
-          - /api/notification_service
+          - /api/notification-service
     plugins:
       - name: jwt
-  
-  - name: search_service
+
+  - name: search-service
     url: http://host.docker.internal:5009  # http://search_service.service.consul:5009
     routes:
-      - name: search_service-route
+      - name: search-service-route
         paths:
-          - /api/search_service
+          - /api/search-service
     plugins:
       - name: jwt
 

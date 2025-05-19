@@ -14,6 +14,7 @@ import com.jobtracker.auth_service.repositories.UserRepository;
 
 import lombok.RequiredArgsConstructor;
 
+import java.net.URI;
 import java.util.List;
 
 
@@ -27,15 +28,25 @@ public class AuthService {
     private final TokenService tokenService;
     private final DiscoveryClient discoveryClient;
 
-    @Value("${spring.services.profile-service.url}")
-    private String profileServiceUrl;
+
     @Value("${spring.services.profile-service.name}")
     private String profileServiceName;
 
 
-    public boolean isServiceAvailable(String serviceName) {
+    public String getServiceEndpointUrl(String serviceName, String endpoint) {
         List<ServiceInstance> instances = discoveryClient.getInstances(serviceName);
-        return (instances != null && !instances.isEmpty());
+        if (instances == null || instances.isEmpty()) return null;
+        // Remove trailing slash from endpoint if present
+        if (endpoint.endsWith("/")) {
+            endpoint = endpoint.substring(0, endpoint.length() - 1);
+        }
+        // Add leading slash to endpoint if missing
+        if (!endpoint.startsWith("/")) {
+            endpoint = "/" + endpoint;
+        }
+
+        // Return the URI using the service name
+        return "http://" + serviceName + endpoint;
     }
 
 
@@ -62,9 +73,10 @@ public class AuthService {
             profileRequest.setFullName(user.getFullName());
             profileRequest.setPhone(request.getPhone());
 
-            if(!isServiceAvailable(profileServiceName)) throw new RuntimeException("No such service found");
+
+            String url = getServiceEndpointUrl(profileServiceName,"/users/profile/");
             // Send the request to the Profile Service
-            ResponseEntity<ProfileResponse> response = restTemplate.postForEntity(profileServiceUrl, profileRequest, ProfileResponse.class);
+            ResponseEntity<ProfileResponse> response = restTemplate.postForEntity(url, profileRequest, ProfileResponse.class);
 
             if (!response.getStatusCode().is2xxSuccessful()) {
                 throw new RuntimeException("Profile creation failed");
@@ -101,9 +113,8 @@ public class AuthService {
         try {
 
 
-            if(!isServiceAvailable(profileServiceName)) throw new RuntimeException("No such service found");
-
-            ResponseEntity<ProfileResponse> response = restTemplate.getForEntity(profileServiceUrl+"/email/" +user.getEmail(), ProfileResponse.class);
+            String url = getServiceEndpointUrl(profileServiceName,"/users/profile/");
+            ResponseEntity<ProfileResponse> response = restTemplate.getForEntity(url+"/email/" +user.getEmail(), ProfileResponse.class);
             // Send the request to the Profile Service
 
 
