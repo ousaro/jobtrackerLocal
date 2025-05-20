@@ -7,7 +7,7 @@ export type JobStatus =
 
 export type JobLocation = 'REMOTE' | 'ONSITE' | 'HYBRID';
 
-export interface Job {
+export interface Application {
   id: string;
   companyName: string;
   positionTitle: string;
@@ -20,7 +20,7 @@ export interface Job {
   attachments?: string[];
 }
 
-export interface JobFormData {
+export interface ApplicationFormData {
   companyName: string;
   positionTitle: string;
   location: JobLocation;

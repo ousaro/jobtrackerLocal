@@ -1,17 +1,17 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from "react";
 import { format } from "date-fns";
-import { Button } from '../../../components/ui/button';
-import { Card } from '../../../components/ui/card';
-import { Calendar } from '../../../components/ui/calendar';
+import { Button } from "../../../components/ui/button";
+import { Card } from "../../../components/ui/card";
+import { Calendar } from "../../../components/ui/calendar";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from "../../../components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -20,100 +20,182 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '../../../components/ui/dialog';
-import { Input } from '../../../components/ui/input';
-import { Label } from '../../../components/ui/label';
-import { Textarea } from '../../../components/ui/textarea';
-import { Badge } from '../../../components/ui/badge';
-import { Plus,ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
-import { Interview, InterviewType, InterviewFormData } from '../../types';
-import { useToast } from '../../../hooks/use-toast';
-
-const mockInterviews: Interview[] = [
-  {
-    id: '1',
-    jobId: '1',
-    companyName: 'TechCorp',
-    positionTitle: 'Senior Frontend Developer',
-    dateTime: new Date('2024-03-20T14:00:00'),
-    type: 'ONLINE', // ONLINE, ONSITE, PHONE
-    notes: 'Technical interview with the team lead',
-    preparationDetails: 'Review React hooks and performance optimization',
-  },
-  {
-    id: '2',
-    jobId: '2',
-    companyName: 'StartupX',
-    positionTitle: 'Full Stack Engineer',
-    dateTime: new Date('2024-03-22T11:00:00'),
-    type: 'ONSITE',
-    notes: 'System design discussion',
-    preparationDetails: 'Prepare for system design and architecture questions',
-  },
-];
-
+} from "../../../components/ui/dialog";
+import { Input } from "../../../components/ui/input";
+import { Label } from "../../../components/ui/label";
+import { Textarea } from "../../../components/ui/textarea";
+import { Badge } from "../../../components/ui/badge";
+import {
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  Calendar as CalendarIcon,
+} from "lucide-react";
+import {
+  Interview,
+  InterviewType,
+  InterviewFormData,
+  SearchResponse,
+} from "../../types";
+import { useToast } from "../../../hooks/use-toast";
+import { useAuth } from "../../../context/AuthContext";
+import {
+  addInterview,
+  getInterviewsByIds,
+  updateInterview,
+} from "../../../api/interviewApi/interviewApi";
+import { searchByType } from "../../../api/searchApi/searchApi";
+import debounce from "lodash.debounce";
 const interviewTypeLabels: Record<InterviewType, string> = {
-  ONLINE: 'Online',
-  ONSITE: 'On-site',
-  PHONE: 'Phone',
+  ONLINE: "Online",
+  ONSITE: "On-site",
+  PHONE: "Phone",
 };
 
 const interviewTypeColors: Record<InterviewType, string> = {
-  ONLINE: 'bg-blue-500',
-  ONSITE: 'bg-green-500',
-  PHONE: 'bg-yellow-500',
+  ONLINE: "bg-blue-500",
+  ONSITE: "bg-green-500",
+  PHONE: "bg-yellow-500",
 };
 
-const initialNewInterview: Partial<InterviewFormData> = {
-  companyName: '',
-  positionTitle: '',
-  type: 'ONLINE',
-  notes: '',
-  preparationDetails: '',
-}
+const initialNewInterview: InterviewFormData = {
+  jobId: "",
+  companyName: "",
+  positionTitle: "",
+  type: "ONLINE",
+  dateTime: new Date(),
+  notes: "",
+  preparationDetails: "",
+};
 
 export default function InterviewsPage() {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [typeFilter, setTypeFilter] = useState<InterviewType | 'ALL'>('ALL');
-  const [interviews, setInterviews] = useState<Interview[]>(mockInterviews);
+  const [typeFilter, setTypeFilter] = useState<InterviewType | "ALL">("ALL");
+  const [interviews, setInterviews] = useState<Interview[]>();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
-  const [newInterview, setNewInterview] = useState<Partial<InterviewFormData>>(initialNewInterview);
+  const [interviewFormData, setInterviewFormData] = useState<InterviewFormData>(initialNewInterview);
+  const [search, setSearch] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<SearchResponse>(
+    {} as SearchResponse
+  );
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
-  const filteredInterviews = interviews.filter((interview) => {
-    const matchesType = typeFilter === 'ALL' || interview.type === typeFilter;
-    const matchesDate = !date || interview.dateTime.toDateString() === date.toDateString();
-    return matchesType && matchesDate;
-  });
+ 
 
-  const handleAddInterview = () => {
-    if (!date) return;
-
-    const [hours, minutes] = (typeof newInterview.dateTime === 'string' ? newInterview.dateTime : '9:00').split(':');
-    const interviewDate = new Date(date);
-    interviewDate.setHours(parseInt(hours), parseInt(minutes));
-
-    const interview: Interview = {
-      id: (interviews.length + 1).toString(),
-      jobId: '0',
-      dateTime: interviewDate,
-      ...newInterview as any,
-    };
-
-    setInterviews([...interviews, interview]);
-    setNewInterview(initialNewInterview);
-    setIsAddDialogOpen(false);
-    toast({
-      title: 'Interview Scheduled',
-      description: 'New interview has been scheduled successfully.',
-    });
+  const handleAddInterview = async () => {
+    try {
+      await addInterview(interviewFormData);
+      toast({
+        title: "Contact Added",
+        description: `Interview added successfully at ${interviewFormData.dateTime}!`,
+      });
+      setIsAddDialogOpen(false);
+      setInterviewFormData(initialNewInterview);
+      setSearch(""); // clear search and refresh list
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error adding contact.",
+        variant: "destructive",
+      });
+    }
   };
 
+  const handleSubmit = async (id: string) => {
+    try {
+      await updateInterview(id, interviewFormData);
+      toast({
+        title: "Interview Updated",
+        description: `Interview updated successfully at ${interviewFormData.dateTime}!`,
+      });
+      setIsEditDialogOpen(false);
+      setInterviewFormData(initialNewInterview);
+
+      fetchSearchResults(""); // refresh whole list
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error updating interview.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const fetchSearchResults = async (q: string) => {
+    try {
+      const res = await searchByType("interviews", q);
+      setSearchResults(res);
+      const ids = res.results.map((result) => result.id);
+
+      let result: Interview[] = [];
+      if (ids.length !== 0) result = await getInterviewsByIds(ids);
+
+      setInterviews(result);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Error fetching search results.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const debouncedSearch = debounce((query: string) => {
+    fetchSearchResults(query);
+  }, 300);
+
+  useEffect(() => {
+    debouncedSearch(search);
+    return () => debouncedSearch.cancel();
+  }, [search]);
+
+  //  const filteredInterviews =interviews && interviews.filter((interview) => {
+  //   const matchesType = typeFilter === 'ALL' || interview.type === typeFilter;
+  //   const matchesDate = !date || interview.dateTime.toDateString() === date.toDateString();
+  //   return matchesType && matchesDate;
+  // });
+
+  const filteredInterviews = interviews 
+
   const getDayClassName = (day: Date) => {
-    const hasInterview = interviews.some(
+    const hasInterview = interviews && interviews.some(
       (interview) => interview.dateTime.toDateString() === day.toDateString()
     );
     return hasInterview ? 'bg-primary text-primary-foreground rounded-full' : '';
+  };
+
+  // Handle input change
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+
+    setTimeout(() => setIsDropdownVisible(e.target.value.length > 0), 350); // Show dropdown only when there's a search query after a delay
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setInterviewFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setInterviewFormData((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  // Handle key press event (Enter key)
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      fetchSearchResults(search); // Perform search on Enter press
+      setIsDropdownVisible(false); // Hide the dropdown after Enter is pressed
+    }
   };
 
   return (
@@ -142,82 +224,90 @@ export default function InterviewsPage() {
               <div className="space-y-2">
                 <Label htmlFor="companyName">Company Name</Label>
                 <Input
-                  id="companyName"
-                  value={newInterview.companyName}
-                  onChange={(e) =>
-                    setNewInterview({ ...newInterview, companyName: e.target.value })
-                  }
+                  name="companyName"
+                  value={interviewFormData.companyName}
+                  onChange={handleChange}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="positionTitle">Position Title</Label>
                 <Input
-                  id="positionTitle"
-                  value={newInterview.positionTitle}
-                  onChange={(e) =>
-                    setNewInterview({ ...newInterview, positionTitle: e.target.value })
-                  }
+                  name="positionTitle"
+                  value={interviewFormData.positionTitle}
+                  onChange={handleChange}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="time">Time</Label>
                 <Input
-                  id="time"
+                  name="time"
                   type="time"
-                  value={newInterview.dateTime ? format(newInterview.dateTime, "HH:mm") : ''}
-                  onChange={(e) =>{
+                  value={
+                    interviewFormData.dateTime
+                      ? format(interviewFormData.dateTime, "HH:mm")
+                      : ""
+                  }
+                  onChange={(e) => {
                     const [hours, minutes] = e.target.value.split(":");
                     const updatedDate = date ? new Date(date) : new Date();
                     updatedDate.setHours(Number(hours), Number(minutes));
-                    setNewInterview({ ...newInterview, dateTime: updatedDate });
+                    setInterviewFormData({
+                      ...interviewFormData,
+                      dateTime: updatedDate,
+                    });
                   }}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="type">Interview Type</Label>
                 <Select
-                  value={newInterview.type}
-                  onValueChange={(value: InterviewType) =>
-                    setNewInterview({ ...newInterview, type: value })
+                  name="type"
+                  value={interviewFormData.type}
+                  onValueChange={(value) =>
+                    setInterviewFormData((prev) => ({
+                      ...prev,
+                      type: value as InterviewType,
+                    }))
                   }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Select interview type" />
                   </SelectTrigger>
                   <SelectContent>
-                    {Object.entries(interviewTypeLabels).map(([value, label]) => (
-                      <SelectItem key={value} value={value}>
-                        {label}
-                      </SelectItem>
-                    ))}
+                    {Object.entries(interviewTypeLabels).map(
+                      ([value, label]) => (
+                        <SelectItem key={value} value={value}>
+                          {label}
+                        </SelectItem>
+                      )
+                    )}
                   </SelectContent>
                 </Select>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="notes">Notes</Label>
                 <Textarea
-                  id="notes"
-                  className='resize-none'
-                  value={newInterview.notes}
-                  onChange={(e) =>
-                    setNewInterview({ ...newInterview, notes: e.target.value })
-                  }
+                  name="notes"
+                  className="resize-none"
+                  value={interviewFormData.notes}
+                  onChange={handleTextareaChange}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="preparation">Preparation Details</Label>
+                <Label htmlFor="preparationDetails">Preparation Details</Label>
                 <Textarea
-                  id="preparation"
-                  className='resize-none'
-                  value={newInterview.preparationDetails}
-                  onChange={(e) =>
-                    setNewInterview({ ...newInterview, preparationDetails: e.target.value })
-                  }
+                  name="preparationDetails"
+                  className="resize-none"
+                  value={interviewFormData.preparationDetails}
+                  onChange={handleTextareaChange}
                 />
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
+              <Button
+                variant="outline"
+                onClick={() => setIsAddDialogOpen(false)}
+              >
                 Cancel
               </Button>
               <Button onClick={handleAddInterview}>Schedule Interview</Button>
@@ -229,11 +319,17 @@ export default function InterviewsPage() {
       <div className="grid gap-6 md:grid-cols-[350px_1fr]">
         <Card className="p-6">
           <div className="space-y-4">
-            <CustomCalendar date={date} setDate={setDate} interviews={interviews} />
+            {interviews && <CustomCalendar
+              date={date}
+              setDate={setDate}
+              interviews={interviews ?? []}
+            />}
 
             <Select
               value={typeFilter}
-              onValueChange={(value) => setTypeFilter(value as InterviewType | 'ALL')}
+              onValueChange={(value) =>
+                setTypeFilter(value as InterviewType | "ALL")
+              }
             >
               <SelectTrigger>
                 <SelectValue placeholder="Filter by type" />
@@ -252,7 +348,7 @@ export default function InterviewsPage() {
 
         <Card className="p-6">
           <div className="space-y-6">
-            {filteredInterviews.map((interview) => (
+            {filteredInterviews?.map((interview) => (
               <div
                 key={interview.id}
                 className="flex items-start space-x-4 p-4 rounded-lg border"
@@ -289,7 +385,7 @@ export default function InterviewsPage() {
                 </div>
               </div>
             ))}
-            {filteredInterviews.length === 0 && (
+            {filteredInterviews?.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 No interviews scheduled for this date
               </div>
@@ -308,18 +404,17 @@ export function CustomCalendar({
 }: {
   date: Date | undefined;
   setDate: (date: Date | undefined) => void;
-  interviews: { dateTime: Date }[];
+  interviews: Interview[];
 }) {
   const [view, setView] = useState<"calendar" | "months" | "years">("calendar"); // Controls view mode
   const [month, setMonth] = useState(new Date()); // Tracks current month
 
   // Handle day selection and avoid double deselection
   const handleDaySelect = (selectedDay: Date | undefined) => {
-    if(!selectedDay) return;
+    if (!selectedDay) return;
     if (!date || selectedDay?.toDateString() !== date.toDateString()) {
-      setDate(selectedDay); 
+      setDate(selectedDay);
     }
-
   };
 
   return (
@@ -327,7 +422,9 @@ export function CustomCalendar({
       {/* Header */}
       <div className="flex justify-between items-center mb-2">
         <button
-          onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() - 1))}
+          onClick={() =>
+            setMonth(new Date(month.getFullYear(), month.getMonth() - 1))
+          }
           className={`${view === "calendar" ? "block" : "hidden"}`} // Hide in month/year view
         >
           <ChevronLeft className="w-5 h-5 text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white" />
@@ -336,18 +433,31 @@ export function CustomCalendar({
         {/* Toggle View: Calendar -> Months -> Years */}
         <button
           className="flex items-center gap-2 text-lg font-semibold"
-          onClick={() => setView(view === "calendar" ? "months" : view === "months" ? "years" : "calendar")}
+          onClick={() =>
+            setView(
+              view === "calendar"
+                ? "months"
+                : view === "months"
+                ? "years"
+                : "calendar"
+            )
+          }
         >
           <CalendarIcon className="w-5 h-5 text-gray-600 dark:text-gray-300" />
           {view === "calendar"
-            ? month.toLocaleString("default", { month: "long", year: "numeric" })
+            ? month.toLocaleString("default", {
+                month: "long",
+                year: "numeric",
+              })
             : view === "months"
             ? month.getFullYear()
             : "Select a Year"}
         </button>
 
         <button
-          onClick={() => setMonth(new Date(month.getFullYear(), month.getMonth() + 1))}
+          onClick={() =>
+            setMonth(new Date(month.getFullYear(), month.getMonth() + 1))
+          }
           className={`${view === "calendar" ? "block" : "hidden"}`} // Hide in month/year view
         >
           <ChevronRight className="w-5 h-5 text-gray-500 hover:text-gray-800 dark:text-gray-300 dark:hover:text-white" />
@@ -375,9 +485,8 @@ export function CustomCalendar({
             interview: "bg-secondary text-secondary-foreground rounded-full",
             today: "font-bold text-blue-600",
           }}
-
           styles={{
-            caption: {display: 'none'},
+            caption: { display: "none" },
           }}
         />
       )}
@@ -389,7 +498,9 @@ export function CustomCalendar({
             <button
               key={i}
               className={`p-3 rounded-md text-sm ${
-                month.getMonth() === i ? "bg-primary text-white dark:text-black" : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                month.getMonth() === i
+                  ? "bg-primary text-white dark:text-black"
+                  : "hover:bg-gray-200 dark:hover:bg-gray-700"
               }`}
               onClick={() => {
                 setMonth(new Date(month.getFullYear(), i));
@@ -411,7 +522,9 @@ export function CustomCalendar({
               <button
                 key={year}
                 className={`p-3 rounded-md text-sm ${
-                  month.getFullYear() === year ? "bg-primary text-white dark:text-black" : "hover:bg-gray-200 dark:hover:bg-gray-700"
+                  month.getFullYear() === year
+                    ? "bg-primary text-white dark:text-black"
+                    : "hover:bg-gray-200 dark:hover:bg-gray-700"
                 }`}
                 onClick={() => {
                   setMonth(new Date(year, month.getMonth()));

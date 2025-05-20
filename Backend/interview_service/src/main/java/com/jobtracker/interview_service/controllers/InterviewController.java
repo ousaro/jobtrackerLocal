@@ -42,6 +42,11 @@ public class InterviewController {
         return res != null ? ResponseEntity.ok(res) : ResponseEntity.notFound().build();
     }
 
+    @PostMapping("/ids")
+    public ResponseEntity<List<InterviewResponse>> getContactsByIds(@RequestBody List<String> ids) {
+        return ResponseEntity.ok(service.getInterviewByIds(ids));
+    }
+
     @PutMapping("/{id}")
     public ResponseEntity<InterviewResponse> update(@PathVariable String id, @RequestBody InterviewRequest request) {
         InterviewResponse res = service.updateInterview(id, request);

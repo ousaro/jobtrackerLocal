@@ -1,6 +1,6 @@
 // Re-export all types
 export * from './auth';
-export * from './job';
+export * from './application';
 export * from './interview';
 export * from './contact';
 export * from './analytics';

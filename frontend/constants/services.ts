@@ -20,6 +20,14 @@ export enum Services{
 
     // Contact
     CONTACT = 'contact-service/contacts',
-    CONTACT_BY_IDS = '/ids'
+    CONTACT_BY_IDS = 'ids',
+
+    // Application 
+    APPLICATION = 'application-service/applications',
+    APPLICATION_BY_IDS = 'ids',
+
+    // Interview
+    INTERVIEW = 'interview-service/interviews',
+    INTERVIEW_BY_IDS = 'ids',
     
 }

@@ -34,6 +34,25 @@ services:
       retries: 3
       start_period: 20s
 
+  search-service:
+    build: .
+    ports:
+      - "5009:5009"
+    environment:
+      MEILI_HOST: http://meilisearch:7700
+      MEILI_KEY: masterKey
+      RABBITMQ_URL: amqp://rabbitmq:5672
+      USER_QUEUE: user.index
+      CONTACT_QUEUE: contact.index
+      APP_QUEUE: application.index
+      PORT: 5009
+    restart: unless-stopped
+    depends_on:
+      - meilisearch
+      - rabbitmq
+    networks:
+      - jbt-network
+
 networks:
   jbt-network:
     external: true

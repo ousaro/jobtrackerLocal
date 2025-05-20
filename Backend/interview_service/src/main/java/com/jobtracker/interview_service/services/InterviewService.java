@@ -48,6 +48,15 @@ public class InterviewService {
        
     }
 
+    public List<InterviewResponse> getInterviewByIds(List<String> ids) {
+        List<Interview> interviews = repository.findAllById(ids);
+
+        // Map Contact entity to ContactResponse DTO
+        return interviews.stream()
+                .map(mapper::toInterviewResponse)
+                .collect(Collectors.toList());
+    }
+
     public InterviewResponse getInterviewById(String id) {
         Optional<Interview> interviewOpt = repository.findById(id);
         return interviewOpt.map(mapper::toInterviewResponse).orElse(null);
