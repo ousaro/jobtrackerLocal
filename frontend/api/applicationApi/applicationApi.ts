@@ -38,7 +38,7 @@ export const getApplication = async (uid: string): Promise<Application> => {
 
 export const addApplication = async (Application: ApplicationFormData): Promise<Application> => {
     try {
-        const response = await applicationApi.post<Application>('/', Application);
+        const response = await applicationApi.post<Application>('', Application);
         return response.data;
     } catch(error) {
         console.error('Error adding Application:', error);

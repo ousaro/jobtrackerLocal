@@ -34,23 +34,25 @@ import {
 import debounce from "lodash.debounce";
 import { useAuth } from "../../../context/AuthContext";
 
-export default function ContactsPage() {
-  const { toast } = useToast();
-  const { user } = useAuth();
-  const [search, setSearch] = useState("");
-  const [contacts, setContacts] = useState<Contact[]>([]);
-  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
-  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
-  const [contactFormData, setContactFormData] = useState<ContactFormData>({
-    jobId: "",
+const initialContactFormData: ContactFormData = {
+   jobId: "",
     name: "",
     email: "",
     phone: "",
     linkedIn: "",
     role: "",
     workingAt: "",
-  });
+}
+
+export default function ContactsPage() {
+  const { toast } = useToast();
+  const { user } = useAuth();
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
+  const [contactFormData, setContactFormData] = useState<ContactFormData>(initialContactFormData);
+  const [search, setSearch] = useState("");
   const [searchResults, setSearchResults] = useState<SearchResponse>(
     {} as SearchResponse
   );
@@ -66,15 +68,7 @@ export default function ContactsPage() {
         description: `${contactFormData.name} added successfully!`,
       });
       setIsAddDialogOpen(false);
-      setContactFormData({
-        jobId: "",
-        name: "",
-        email: "",
-        phone: "",
-        linkedIn: "",
-        role: "",
-        workingAt: "",
-      });
+      setContactFormData(initialContactFormData); // reset form data
       setSearch(""); // clear search and refresh list
     } catch (error: any) {
       toast({
@@ -95,15 +89,7 @@ export default function ContactsPage() {
       });
       setIsEditDialogOpen(false);
       setSelectedContact(null);
-      setContactFormData({
-        jobId: "",
-        name: "",
-        email: "",
-        phone: "",
-        linkedIn: "",
-        role: "",
-        workingAt: "",
-      });
+      setContactFormData(initialContactFormData); // reset form data
       fetchSearchResults(""); // refresh whole list
     } catch (error: any) {
       toast({

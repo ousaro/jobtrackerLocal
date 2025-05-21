@@ -14,8 +14,8 @@ class ApiConfig(AppConfig):
         service_port = config('PORT', default=5002, cast=int) 
         consul_host = config('CONSUL_HOST', default='localhost') # use 'localhost' if Consul runs on local, else 'consul' (docker service name)
         consul_port = config('CONSUL_PORT', default=8500, cast=int)
-        service_id = config('SERVICE_ID', default='application_service')
-        service_name = config('SERVICE_NAME', default='application_service')
+        service_id = config('SERVICE_ID', default='application-service')
+        service_name = config('SERVICE_NAME', default='application-service')
 
         payload = {
             "ID": service_id,
@@ -23,7 +23,7 @@ class ApiConfig(AppConfig):
             "Address": service_host,
             "Port": service_port,
             "Check": {
-                "HTTP": f"http://{service_host}:{service_port}/health/",
+                "HTTP": f"http://{service_host}:{service_port}/health",
                 "Interval": "10s"
             }
         }

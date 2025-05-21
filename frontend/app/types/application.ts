@@ -9,23 +9,27 @@ export type JobLocation = 'REMOTE' | 'ONSITE' | 'HYBRID';
 
 export interface Application {
   id: string;
-  companyName: string;
-  positionTitle: string;
-  applicationDate: Date;
+  owner_id: string;
+  company_name: string;
+  position_title: string;
+  application_date: string;
   location: JobLocation;
-  salaryExpectation?: number;
-  jobDescriptionLink?: string;
+  salary_expectation?: number;
+  job_description_link?: string;
   status: JobStatus;
-  notes?: string;
-  attachments?: string[];
+  created_at: Date,
+  last_modified: Date,
 }
 
 export interface ApplicationFormData {
-  companyName: string;
-  positionTitle: string;
+  owner_id: string;
+  company_name: string;
+  position_title: string;
   location: JobLocation;
-  salaryExpectation?: number;
-  jobDescriptionLink?: string;
+  application_date: string;
+
+  salary_expectation?: number;
+  job_description_link?: string;
   status: JobStatus;
-  notes?: string;
-} 
+
+  } 

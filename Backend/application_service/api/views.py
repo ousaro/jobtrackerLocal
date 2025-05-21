@@ -6,15 +6,28 @@ from rest_framework_mongoengine.generics import (
     RetrieveUpdateDestroyAPIView
 )
 from django.conf import settings
+from bson import ObjectId
+
 
 from .models import JobApplication
 from .serializers import JobApplicationSerializer
+from rest_framework.exceptions import ValidationError
+from rest_framework import status
 from utils.rabbitmq import (publish_event, publish_to_app_queue)
 
 class JobApplicationListCreateView(ListCreateAPIView):
     queryset = JobApplication.objects.all()
     serializer_class = JobApplicationSerializer
     #permission_classes = [IsAuthenticated]
+    # def create(self, request, *args, **kwargs):
+    #         serializer = self.get_serializer(data=request.data)
+    #         try:
+    #             serializer.is_valid(raise_exception=True)
+    #         except ValidationError as exc:
+    #             # LOG the error for debugging
+    #             print("Validation Error:", exc.detail)
+    #             return Response(exc.detail, status=status.HTTP_400_BAD_REQUEST)
+    #         return super().create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
         application = serializer.save()
@@ -63,6 +76,14 @@ class JobApplicationRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
             payload
         )
         instance.delete()
+
+class JobApplicationBulkRetrieveView(APIView):
+    def post(self, request, *args, **kwargs):
+        ids = request.data if isinstance(request.data, list) else []
+        object_ids = [ObjectId(i) for i in ids if ObjectId.is_valid(i)]
+        queryset = JobApplication.objects(id__in=object_ids)
+        serializer = JobApplicationSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 class HealthCheckView(APIView):
     def get(self, request, *args, **kwargs):

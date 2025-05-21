@@ -6,13 +6,15 @@ class JobApplication(me.Document):
     company_name = me.StringField(required=True)
     position_title = me.StringField(required=True)
     application_date = me.DateTimeField(required=True)
-    location = me.StringField()
-    salary_expectation = me.IntField()
+    location = me.StringField(required=True)
+    salary_expectation = me.IntField(required=True)
     status = me.StringField(
-        choices=['APPLIED', 'INTERVIEW_SCHEDULED', 'OFFERED', 'REJECTED', 'HIRED'], 
+        choices=[ 'SAVED','APPLIED', 'INTERVIEW_SCHEDULED','OFFER_RECEIVED', 'REJECTED', 'HIRED'], 
+        default='SAVED',
         required=True
     )
-    job_description_link = me.URLField()
+    job_description_link = me.StringField(required=True)
+
     
     # Timestamp fields
     created_at = me.DateTimeField(default=datetime.utcnow)

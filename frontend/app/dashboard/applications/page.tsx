@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Button } from '../../../components/ui/button';
 import { Card } from '../../../components/ui/card';
 import {
@@ -30,42 +30,14 @@ import {
 import { Input } from '../../../components/ui/input';
 import { Badge } from '../../../components/ui/badge';
 import { Plus, Search } from 'lucide-react';
-import { Job, JobStatus, JobLocation, JobFormData } from '../../types';
+import { Application, JobStatus, JobLocation, ApplicationFormData, SearchResponse } from '../../types';
 import { Label } from '../../../components/ui/label';
 import { useToast } from '../../../hooks/use-toast';
+import { useAuth } from '../../../context/AuthContext';
+import { addApplication, getApplicationsByIds, updateApplication } from '../../../api/applicationApi/applicationApi';
+import { searchByType } from '../../../api/searchApi/searchApi';
+import debounce from 'lodash.debounce';
 
-const mockJobs: Job[] = [
-  {
-    id: '1',
-    companyName: 'TechCorp',
-    positionTitle: 'Senior Frontend Developer',
-    applicationDate: new Date('2024-03-15'),
-    location: 'REMOTE',
-    salaryExpectation: 120000,
-    status: 'INTERVIEW_SCHEDULED',
-    jobDescriptionLink: 'https://example.com/job/1',
-  },
-  {
-    id: '2',
-    companyName: 'StartupX',
-    positionTitle: 'Full Stack Engineer',
-    applicationDate: new Date('2024-03-14'),
-    location: 'HYBRID',
-    salaryExpectation: 140000,
-    status: 'APPLIED',
-    jobDescriptionLink: 'https://example.com/job/2',
-  },
-  {
-    id: '3',
-    companyName: 'BigTech Inc',
-    positionTitle: 'React Developer',
-    applicationDate: new Date('2024-03-13'),
-    location: 'ONSITE',
-    salaryExpectation: 130000,
-    status: 'SAVED',
-    jobDescriptionLink: 'https://example.com/job/3',
-  },
-];
 
 const statusColors: Record<JobStatus, string> = {
   SAVED: 'bg-gray-500',
@@ -89,88 +61,139 @@ const locationLabels: Record<JobLocation, string> = {
   HYBRID: 'Hybrid',
 };
 
-const initialJob: Partial<JobFormData> = {
-  companyName: '',
-  positionTitle: '',
+const initialApplication: ApplicationFormData = {
+  owner_id: '',
+  company_name: '',
+  position_title: '',
   location: 'REMOTE',
-  salaryExpectation: undefined,
-  jobDescriptionLink: '',
+  application_date: '',
+  salary_expectation: undefined,
+  job_description_link: '',
   status: 'SAVED',
 }
 
 export default function ApplicationsPage() {
   const { toast } = useToast();
-  const [searchTerm, setSearchTerm] = useState<string>('');
+  const { user } = useAuth();
   const [statusFilter, setStatusFilter] = useState<JobStatus | 'ALL'>('ALL');
-  const [jobs, setJobs] = useState<Job[]>(mockJobs);
-  const [newJob, setNewJob] = useState<Partial<JobFormData>>(initialJob);
-  const [editedJob, setEditedJob] = useState<Partial<JobFormData>>(initialJob);
+  const [applications, setApplications] = useState<Application[]>([]);
+  const [applicationFormData, setApplicationFormData] = useState<ApplicationFormData>(initialApplication);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
-  const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState<boolean>(false);
   const [isStatusDialogOpen, setIsStatusDialogOpen] = useState<boolean>(false);
+  const [search, setSearch] = useState<string>("");
+  const [searchResults, setSearchResults] = useState<SearchResponse>({} as SearchResponse);
+  const [isDropdownVisible, setIsDropdownVisible] = useState(false);
 
-  const filteredJobs = jobs.filter((job) => {
-    const matchesSearch =
-      job.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      job.positionTitle.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'ALL' || job.status === statusFilter;
-    return matchesSearch && matchesStatus;
-  });
 
-  const handleAddJob = () => {
-    const job: Job = {
-      id: (jobs.length + 1).toString(),
-      applicationDate: new Date(),
-      ...newJob as any,
+   // Adds a new Application via API then refresh list
+    const handleAddApplication = async () => {
+      try {
+        if(!user) return;
+        await addApplication({ ...applicationFormData , owner_id: user.id, application_date: new Date().toISOString() });
+        toast({
+          title: "Application Added",
+          description: `Application added successfully!`,
+        });
+        setIsAddDialogOpen(false);
+        setApplicationFormData(initialApplication);
+        setSearch(""); // clear search and refresh list
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Error adding Application.",
+          variant: "destructive",
+        });
+      }
     };
-    setJobs([...jobs, job]);
-    setNewJob({
-      companyName: '',
-      positionTitle: '',
-      location: 'REMOTE',
-      salaryExpectation: undefined,
-      jobDescriptionLink: '',
-      status: 'SAVED',
-    });
-    setIsAddDialogOpen(false);
-    toast({
-      title: 'Job Added',
-      description: 'New job application has been added successfully.',
-    });
-  };
+  
+    // Edits the selected Application (by id) then refresh list
+    const handleSubmit = async (id: string) => {
+      try {
+        if (!user) return;
+        await updateApplication(id, { ...applicationFormData, owner_id: user.id,application_date: new Date().toISOString() });
+        toast({
+          title: "Application Updated",
+          description: `Application's info updated!`,
+        });
+        setIsEditDialogOpen(false);
+        setSelectedApplication(null);
+        setApplicationFormData(initialApplication);
+        fetchSearchResults(""); // refresh whole list
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Error updating Application.",
+          variant: "destructive",
+        });
+      }
+    };
+  
+    const fetchSearchResults = async (q: string) => {
+      try {
+        const res = await searchByType("applications", q);
+        setSearchResults(res);
+        const ids = res.results.map((result) => result.id);
+  
+        let result: Application[] = [];
+        if (ids.length !== 0) result = await getApplicationsByIds(ids);
+  
+        setApplications(result);
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: error.message || "Error fetching search results.",
+          variant: "destructive",
+        });
+      }
+    };
+  
+    const debouncedSearch = debounce((query: string) => {
+      fetchSearchResults(query);
+    }, 300);
+  
+    useEffect(() => {
+      debouncedSearch(search);
+      return () => debouncedSearch.cancel();
+    }, [search]);
+  
+    // Handle input change
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      setSearch(e.target.value);
+      
+      setTimeout(() => setIsDropdownVisible(e.target.value.length > 0), 350); // Show dropdown only when there's a search query after a delay
+    };
+  
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      const { name, value } = e.target;
+      setApplicationFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    };
+  
+    // Handle key press event (Enter key)
+    const handleKeyDown = (e: React.KeyboardEvent) => {
+      if (e.key === "Enter") {
+        fetchSearchResults(search); // Perform search on Enter press
+        setIsDropdownVisible(false); // Hide the dropdown after Enter is pressed
+      }
+    };
+ 
 
-  const handleStatusUpdate = (jobId: string, newStatus: JobStatus) => {
-    setJobs(jobs.map(job => 
-      job.id === jobId ? { ...job, status: newStatus } : job
-    ));
+  const handleStatusUpdate = async (id: string, newStatus: JobStatus) => {
+    const updatedApplication = applications.find(application => application.id === id);
+    if (!updatedApplication) return;
+    if (!user) return;
+    await updateApplication(id, { ...updatedApplication, status: newStatus });
+    setApplicationFormData({...updatedApplication, status: newStatus});
     setIsStatusDialogOpen(false);
-    setSelectedJob(null);
+    setSelectedApplication(null);
     toast({
       title: 'Status Updated',
       description: `Application status updated to ${statusLabels[newStatus]}.`,
     });
-  };
-
-  const hadleEditJob = (jobId: string, editedJob: Job) => {
-    setJobs(jobs.map(job => 
-      job.id === jobId ? { ...editedJob } : job
-    ));
-    setIsEditDialogOpen(false);
-    setSelectedJob(null);
-    toast({
-      title: 'Application Updated',
-      description: `Your job application has been updated successfully.`,
-    }); 
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setEditedJob((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (jobId: string) => {
-    hadleEditJob(jobId, editedJob as Job);
   };
 
   return (
@@ -197,31 +220,28 @@ export default function ApplicationsPage() {
             </DialogHeader>
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="companyName">Company Name</Label>
+                <Label htmlFor="company_name">Company Name</Label>
                 <Input
-                  id="companyName"
-                  value={newJob.companyName}
-                  onChange={(e) =>
-                    setNewJob({ ...newJob, companyName: e.target.value })
-                  }
+                  name="company_name"
+                  value={applicationFormData.company_name}
+                  onChange={handleChange}
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="positionTitle">Position Title</Label>
+                <Label htmlFor="position_title">Position Title</Label>
                 <Input
-                  id="positionTitle"
-                  value={newJob.positionTitle}
-                  onChange={(e) =>
-                    setNewJob({ ...newJob, positionTitle: e.target.value })
-                  }
+                  name="position_title"
+                  value={applicationFormData.position_title}
+                  onChange={handleChange}
                 />
               </div>
               <div className="space-y-2">
                 <Label htmlFor="location">Location</Label>
                 <Select
-                  value={newJob.location}
+                  name="location"
+                  value={applicationFormData.location}
                   onValueChange={(value: JobLocation) =>
-                    setNewJob({ ...newJob, location: value })
+                    setApplicationFormData({ ...applicationFormData, location: value })
                   }
                 >
                   <SelectTrigger>
@@ -239,26 +259,24 @@ export default function ApplicationsPage() {
               <div className="space-y-2">
                 <Label htmlFor="salary">Salary Expectation</Label>
                 <Input
-                  id="salary"
+                  name="salary"
                   type="number"
-                  value={newJob.salaryExpectation || ''}
+                  value={applicationFormData.salary_expectation || ''}
                   onChange={(e) =>
-                    setNewJob({
-                      ...newJob,
-                      salaryExpectation: parseInt(e.target.value) || undefined,
+                    setApplicationFormData({
+                      ...applicationFormData,
+                      salary_expectation: parseInt(e.target.value) || undefined,
                     })
                   }
                 />
               </div>
               <div className="space-y-2">
                  <div className="space-y-2">
-                    <Label htmlFor="jobLink">Job Description Link</Label>
+                    <Label htmlFor="job_description_link">Job Description Link</Label>
                     <Input
-                    id="jobLink"
-                    value={newJob.jobDescriptionLink}
-                    onChange={(e) =>
-                        setNewJob({ ...newJob, jobDescriptionLink: e.target.value })
-                    }
+                    name="job_description_link"
+                    value={applicationFormData.job_description_link}
+                    onChange={handleChange}
                     />
                  </div>
               </div>
@@ -267,7 +285,7 @@ export default function ApplicationsPage() {
               <Button variant="outline" onClick={() => setIsAddDialogOpen(false)}>
                 Cancel
               </Button>
-              <Button onClick={handleAddJob}>Add Application</Button>
+              <Button onClick={handleAddApplication}>Add Application</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -280,9 +298,33 @@ export default function ApplicationsPage() {
             <Input
               placeholder="Search companies or positions..."
               className="pl-8"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={handleKeyDown}
             />
+            {/* Dropdown for suggestions */}
+          {isDropdownVisible &&
+            searchResults.results &&
+            searchResults.results.length > 0 && (
+              <div className="absolute z-10 w-full dark:bg-inherit bg-white border dark:border-black border-gray-200 dark:shadow-black mt-2 rounded-lg shadow-md max-h-60 overflow-y-auto">
+                <ul className="divide-y dark:divide-gray-700 divide-gray-100">
+                  {searchResults.results.map((result) => (
+                    <li key={result.id}>
+                     <div className="block px-4 py-2 text-sm text-gray-800 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700">
+                          <div className="flex items-center gap-3">
+                            <h2
+                              className="text-sm font-semibold"
+                              dangerouslySetInnerHTML={{
+                                __html: result.highlight.fullName,
+                              }}
+                            ></h2>
+                          </div>
+                        </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
           <Select
             value={statusFilter}
@@ -316,39 +358,39 @@ export default function ApplicationsPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredJobs.map((job) => (
-                <TableRow key={job.id}>
-                  <TableCell className="font-medium">{job.companyName}</TableCell>
-                  <TableCell>{job.positionTitle}</TableCell>
+              {!isDropdownVisible && applications.length > 0 && applications.map((application) => (
+                <TableRow key={application.id}>
+                  <TableCell className="font-medium">{application.company_name}</TableCell>
+                  <TableCell>{application.position_title}</TableCell>
                   <TableCell>
                     <Badge variant="secondary">
-                      {locationLabels[job.location]}
+                      {locationLabels[application.location]}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {job.applicationDate.toLocaleDateString()}
+                    {application.application_date.split("T")[0]}
                   </TableCell>
                   <TableCell>
-                    ${job.salaryExpectation?.toLocaleString()}
+                    ${application.salary_expectation?.toLocaleString()}
                   </TableCell>
                   <TableCell>
                     <Badge
-                      className={statusColors[job.status]}
+                      className={statusColors[application.status]}
                       variant="secondary"
                     >
-                      {statusLabels[job.status]}
+                      {statusLabels[application.status]}
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    <Dialog open={isStatusDialogOpen && selectedJob?.id === job.id} onOpenChange={(open) => {
+                    <Dialog open={isStatusDialogOpen && selectedApplication?.id === application.id} onOpenChange={(open) => {
                       setIsStatusDialogOpen(open);
-                      if (!open) setSelectedJob(null);
+                      if (!open) setSelectedApplication(null);
                     }}>
                       <DialogTrigger asChild>
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => setSelectedJob(job)}
+                          onClick={() => setSelectedApplication(application)}
                         >
                           Update Status
                         </Button>
@@ -357,16 +399,16 @@ export default function ApplicationsPage() {
                         <DialogHeader>
                           <DialogTitle>Update Application Status</DialogTitle>
                           <DialogDescription>
-                            Update the status for {job.positionTitle} at {job.companyName}
+                            Update the status for {application.position_title} at {application.company_name}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                           {Object.entries(statusLabels).map(([value, label]) => (
                             <Button
                               key={value}
-                              variant={job.status === value ? "default" : "outline"}
+                              variant={application.status === value ? "default" : "outline"}
                               className="w-full"
-                              onClick={() => handleStatusUpdate(job.id, value as JobStatus)}
+                              onClick={() => handleStatusUpdate(application.id, value as JobStatus)}
                             >
                               {label}
                             </Button>
@@ -375,18 +417,18 @@ export default function ApplicationsPage() {
                       </DialogContent>
                     </Dialog>
                     <Dialog
-                      open={isEditDialogOpen && selectedJob?.id === job.id}
+                      open={isEditDialogOpen && selectedApplication?.id === application.id}
                       onOpenChange={(open) => {
-                        setEditedJob(job);
+                        setApplicationFormData(application);
                         setIsEditDialogOpen(open);
                         if (!open) {
-                          setSelectedJob(null);
-                          setEditedJob(initialJob);
+                          setSelectedApplication(null);
+                          setApplicationFormData(initialApplication);
                         }
                       }}
                     >
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => setSelectedJob(job)}>
+                        <Button variant="outline" size="sm" onClick={() => setSelectedApplication(application)}>
                           Edit Job
                         </Button>
                       </DialogTrigger>
@@ -394,28 +436,46 @@ export default function ApplicationsPage() {
                         <DialogHeader>
                           <DialogTitle>Edit Job Details</DialogTitle>
                           <DialogDescription>
-                            Modify the details for <strong>{job.positionTitle}</strong> at <strong>{job.companyName}</strong>
+                            Modify the details for <strong>{application.position_title}</strong> at <strong>{application.company_name}</strong>
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4">
                           <Label>Position Title</Label>
-                          <Input name="positionTitle" value={editedJob.positionTitle} onChange={handleChange} />
+                          <Input name="position_title" value={applicationFormData.position_title} onChange={handleChange} />
 
                           <Label>Company Name</Label>
-                          <Input name="companyName" value={editedJob.companyName} onChange={handleChange} />
+                          <Input name="company_name" value={applicationFormData.company_name} onChange={handleChange} />
 
-                          <Label>Location</Label>
-                          <Input name="location" value={editedJob.location} onChange={handleChange} />
+                          <Label htmlFor="location">Location</Label>
+                          <Select
+                            name="location"
+                            value={applicationFormData.location}
+                            onValueChange={(value: JobLocation) =>
+                              setApplicationFormData({ ...applicationFormData, location: value })
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select location type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {Object.entries(locationLabels).map(([value, label]) => (
+                                <SelectItem key={value} value={value}>
+                                  {label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
 
+                          
                           <Label>Salary Expectation</Label>
-                          <Input type="number" name="salaryExpectation" value={editedJob.salaryExpectation} onChange={handleChange} />
+                          <Input type="number" name="salary_expectation" value={applicationFormData.salary_expectation} onChange={handleChange} />
 
                           <Label>Job Description Link</Label>
-                          <Input name="jobDescriptionLink" value={editedJob.jobDescriptionLink} onChange={handleChange} />
+                          <Input name="job_description_link" value={applicationFormData.job_description_link} onChange={handleChange} />
                         </div>
                         <div className="flex justify-end space-x-2 mt-4">
                           <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-                          <Button onClick={() => handleSubmit(selectedJob?.id || '')}>Save Changes</Button>
+                          <Button onClick={() => handleSubmit(selectedApplication?.id || '')}>Save Changes</Button>
                         </div>
                       </DialogContent>
                     </Dialog>

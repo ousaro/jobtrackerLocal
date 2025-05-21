@@ -57,7 +57,7 @@ const deleteIndex = async (indexName) => {
 })();
 
 
-//deleteIndex('interviews')
+//deleteIndex('applications')
 
 
 
