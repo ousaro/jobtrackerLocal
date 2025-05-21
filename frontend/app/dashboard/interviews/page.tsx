@@ -70,8 +70,8 @@ const initialNewInterview: InterviewFormData = {
 
 export default function InterviewsPage() {
   const { toast } = useToast();
-  const { user } = useAuth();
   const [date, setDate] = useState<Date | undefined>(new Date());
+  const [time, setTime] = useState<string>("");
   const [typeFilter, setTypeFilter] = useState<InterviewType | "ALL">("ALL");
   const [interviews, setInterviews] = useState<Interview[]>();
   const [isAddDialogOpen, setIsAddDialogOpen] = useState<boolean>(false);
@@ -87,13 +87,18 @@ export default function InterviewsPage() {
 
   const handleAddInterview = async () => {
     try {
-      await addInterview(interviewFormData);
+      if(!date) return;
+      const safeDate = new Date(date.getTime());
+      const [hours, minutes] = time.split(":").map(Number);
+      safeDate.setHours(hours, minutes, 0, 0); // Set the time to the selected date
+      const formattedDate = format(safeDate, "yyyy-MM-dd'T'HH:mm:ss");
+      await addInterview({...interviewFormData, dateTime: safeDate});
       toast({
         title: "Contact Added",
-        description: `Interview added successfully at ${interviewFormData.dateTime}!`,
+        description: `Interview added successfully at ${formattedDate}!`,
       });
       setIsAddDialogOpen(false);
-      setInterviewFormData(initialNewInterview);
+      setInterviewFormData({...interviewFormData, dateTime: safeDate});
       setSearch(""); // clear search and refresh list
     } catch (error: any) {
       toast({
@@ -148,31 +153,17 @@ export default function InterviewsPage() {
   }, 300);
 
   useEffect(() => {
-    debouncedSearch(search);
+    if (!date || !typeFilter) return;
+
+    const formatted = date.toLocaleDateString('en-CA');
+    const type = typeFilter === "ALL" ? "" : typeFilter;
+
+    const query = `date="${formatted}"&type="${type}"`;
+    debouncedSearch(query);
+
     return () => debouncedSearch.cancel();
-  }, [search]);
+  }, [date,typeFilter]);
 
-  //  const filteredInterviews =interviews && interviews.filter((interview) => {
-  //   const matchesType = typeFilter === 'ALL' || interview.type === typeFilter;
-  //   const matchesDate = !date || interview.dateTime.toDateString() === date.toDateString();
-  //   return matchesType && matchesDate;
-  // });
-
-  const filteredInterviews = interviews 
-
-  const getDayClassName = (day: Date) => {
-    const hasInterview = interviews && interviews.some(
-      (interview) => interview.dateTime.toDateString() === day.toDateString()
-    );
-    return hasInterview ? 'bg-primary text-primary-foreground rounded-full' : '';
-  };
-
-  // Handle input change
-  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearch(e.target.value);
-
-    setTimeout(() => setIsDropdownVisible(e.target.value.length > 0), 350); // Show dropdown only when there's a search query after a delay
-  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -190,13 +181,6 @@ export default function InterviewsPage() {
     }));
   };
 
-  // Handle key press event (Enter key)
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter") {
-      fetchSearchResults(search); // Perform search on Enter press
-      setIsDropdownVisible(false); // Hide the dropdown after Enter is pressed
-    }
-  };
 
   return (
     <div className="space-y-6">
@@ -243,18 +227,18 @@ export default function InterviewsPage() {
                   name="time"
                   type="time"
                   value={
-                    interviewFormData.dateTime
-                      ? format(interviewFormData.dateTime, "HH:mm")
-                      : ""
+                    time
+                      ? time
+                      : interviewFormData.dateTime.toLocaleTimeString(
+                          "en-CA",
+                          {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          }
+                        )
                   }
                   onChange={(e) => {
-                    const [hours, minutes] = e.target.value.split(":");
-                    const updatedDate = date ? new Date(date) : new Date();
-                    updatedDate.setHours(Number(hours), Number(minutes));
-                    setInterviewFormData({
-                      ...interviewFormData,
-                      dateTime: updatedDate,
-                    });
+                    setTime(e.target.value);
                   }}
                 />
               </div>
@@ -348,7 +332,7 @@ export default function InterviewsPage() {
 
         <Card className="p-6">
           <div className="space-y-6">
-            {filteredInterviews?.map((interview) => (
+            {interviews?.map((interview) => (
               <div
                 key={interview.id}
                 className="flex items-start space-x-4 p-4 rounded-lg border"
@@ -385,7 +369,7 @@ export default function InterviewsPage() {
                 </div>
               </div>
             ))}
-            {filteredInterviews?.length === 0 && (
+            {interviews?.length === 0 && (
               <div className="text-center text-muted-foreground py-8">
                 No interviews scheduled for this date
               </div>

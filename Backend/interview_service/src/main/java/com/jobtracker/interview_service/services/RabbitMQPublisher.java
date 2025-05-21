@@ -36,7 +36,7 @@ public class RabbitMQPublisher {
         rabbitTemplate.convertAndSend(exchange, interviewUpdatedRoutingKey, interview);
     }
 
-    public void publishToContactQueue(InterviewQueuePayload payload) {
+    public void publishToInteviewQueue(InterviewQueuePayload payload) {
         rabbitTemplate.convertAndSend(interviewQueue, payload);
     }
 }

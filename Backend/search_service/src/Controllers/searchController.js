@@ -5,18 +5,61 @@ const highlightPerType = {
   users: ['fullName'],
   contacts: ['fullName', 'phone'],
   applications: ['position_title'],
-  interviews: ['companyName'],
+  interviews: ['type',"dateTime","date"],
 }
+
+const filterableFields = {
+  id: 'string',
+  createdAt: 'date',
+  updatedAt: 'date',
+  dateTime: 'date',
+  date: 'date',
+  type: 'string',
+
+};
+
+const buildFiltersFromQuery = (query) => {
+  const filters = [];
+
+  for (const key in query) {
+    const value = query[key];
+    if (!filterableFields[key]) continue;
+
+    const fieldType = filterableFields[key];
+
+    // Handle range syntax like createdAfter or createdBefore
+    if (fieldType === 'date') {
+      if (key.endsWith('After')) {
+        const field = key.replace(/After$/, '');
+        filters.push(`${field} >= "${value}"`);
+      } else if (key.endsWith('Before')) {
+        const field = key.replace(/Before$/, '');
+        filters.push(`${field} <= "${value}"`);
+      } else {
+        filters.push(`${key} = "${value}"`);
+      }
+    } else {
+      filters.push(`${key} = "${value}"`);
+    }
+  }
+
+  return filters;
+};
+
 
 const searchByType = async (req, res) => {
     const { type } = req.params; // users, contacts, applications, interviews
     const query = req.query.q || '';
     try {
       const index = getIndex(type);
+
+      const filters = buildFiltersFromQuery(req.query);
+      console.log(`[🔍] Searching ${type} with query: ${query}`);
       
       const result = await index.search(query, {
         limit: 10,
-        attributesToHighlight: highlightPerType[type], // adjust per type
+        attributesToHighlight: highlightPerType[type], 
+        ...(filters.length > 0 && { filter: filters }),
       });
   
       const hits = result.hits.map(hit => ({
@@ -40,10 +83,11 @@ const searchByTypeWithId = async (req, res) => {
   const query = req.query.q || '';
   try {
     const index = getIndex(type);
+    const filters = buildFiltersFromQuery(req.query);
     const result = await index.search(query, {
       limit: 10,
       attributesToHighlight: highlightPerType[type], // adjust per type
-      filter: `id = "${id}"`
+      ...(filters.length > 0 && { filter: filters }),
     });
 
     

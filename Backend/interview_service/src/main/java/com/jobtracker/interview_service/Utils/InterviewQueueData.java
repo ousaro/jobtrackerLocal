@@ -1,13 +1,17 @@
 package com.jobtracker.interview_service.Utils;
 
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 public class InterviewQueueData {
 
     String id;
-    String companyName;
+    String type;
+    String dateTime;
+    String date;
+
 }

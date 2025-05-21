@@ -6,6 +6,8 @@ import com.jobtracker.interview_service.entities.Interview;
 
 import lombok.RequiredArgsConstructor;
 
+import java.time.format.DateTimeFormatter;
+
 @Service
 @RequiredArgsConstructor
 public class InterviewMapper {
@@ -37,10 +39,15 @@ public class InterviewMapper {
             .build();
     }
 
-    public InterviewQueuePayload toContactQueuePayload(Interview interview){
+    public InterviewQueuePayload toInterviewQueuePayload(Interview interview){
         InterviewQueueData data = new InterviewQueueData();
         data.setId(interview.getId());
-        data.setCompanyName(interview.getCompanyName());
+        data.setType(interview.getType());
+        // Convert LocalDateTime to ISO 8601 string
+        String isoDateTime = interview.getDateTime().format(DateTimeFormatter.ISO_DATE_TIME);
+        data.setDateTime(isoDateTime);
+        String dateOnly = interview.getDateTime().toLocalDate().toString();
+        data.setDate(dateOnly);
         return InterviewQueuePayload.builder()
                 .action("create")
                 .data(data)
@@ -48,10 +55,12 @@ public class InterviewMapper {
 
     }
 
-    public InterviewQueuePayload toContactQueuePayload(String id){
+    public InterviewQueuePayload toInterviewQueuePayload(String id){
         InterviewQueueData data = new InterviewQueueData();
         data.setId(id);
-        data.setCompanyName("");
+        data.setType("");
+        data.setDateTime("");
+        data.setDate("");
         return InterviewQueuePayload.builder()
                 .action("delete")
                 .data(data)

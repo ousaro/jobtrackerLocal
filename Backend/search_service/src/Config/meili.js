@@ -12,18 +12,21 @@ const meili = new MeiliSearch({
 const getIndex = (indexName) => meili.index(indexName);
 
 // creating filter for search
-const createFilter = async(index, filter) => {
-  await index.updateFilterableAttributes(filter);
-};
-
-
-// creating a id filter for all indexes
-const createIdFilter = async(filter) => {
-  for (const index of ['users', 'contacts', 'applications', 'interviews']) {
+const createFilter = async (indexes, filters) => {
+  for (const index of indexes) {
     const indexInstance = meili.index(index);
-    await createFilter(indexInstance, [filter]);
+
+    // Get current filterable attributes
+    const current = await indexInstance.getFilterableAttributes();
+
+    // Merge existing and new filters (remove duplicates)
+    const newFilters = [...new Set([...current, ...filters])];
+
+    // Update the index with the new filterable attributes
+    await indexInstance.updateFilterableAttributes(newFilters);
   }
 };
+
 
 const deleteIndex = async (indexName) => {
   const index = meili.index(indexName);
@@ -44,13 +47,17 @@ const deleteIndex = async (indexName) => {
 
 //deleteIndex('contacts')
 
-// createIdFilter('id')
-//   .then(() => {
-//     console.log('Filter created successfully');
-//   })
-//   .catch((error) => {
-//     console.error('Error creating filter:', error);
-//   });
+(async () => {
+  await createFilter(['interviews'],['date','dateTime','type']);
+  console.log('Interview Filter created successfully');
+})();
+
+(async () => {
+  await createFilter(['users', 'contacts', 'applications', 'interviews'],['createdAt', 'updatedAt']);
+  console.log('User, Contact, Application, and Interview Filters created successfully');
+})();
+
+
 
 module.exports = {
   meili,

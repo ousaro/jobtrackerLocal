@@ -30,8 +30,8 @@ public class InterviewService {
         Interview interview = mapper.toInterview(request);
         Interview savedInterview = repository.save(interview);
         InterviewResponse resInterview = mapper.toInterviewResponse(savedInterview);
-        InterviewQueuePayload payload = mapper.toContactQueuePayload(savedInterview);
-        rabbitMQService.publishToContactQueue(payload);
+        InterviewQueuePayload payload = mapper.toInterviewQueuePayload(savedInterview);
+        rabbitMQService.publishToInteviewQueue(payload);
         rabbitMQService.publishInterviewCreatedEvent(resInterview);
         return resInterview;
     }
@@ -83,8 +83,8 @@ public class InterviewService {
 
             Interview savedInterview = repository.save(interview);
             InterviewResponse resInterview = mapper.toInterviewResponse(savedInterview);
-            InterviewQueuePayload payload = mapper.toContactQueuePayload(savedInterview);
-            rabbitMQService.publishToContactQueue(payload);
+            InterviewQueuePayload payload = mapper.toInterviewQueuePayload(savedInterview);
+            rabbitMQService.publishToInteviewQueue(payload);
             rabbitMQService.publishInterviewUpdatedEvent(resInterview);
             return resInterview;
         }
@@ -95,8 +95,8 @@ public class InterviewService {
     public boolean deleteInterview(String id) {
         if (repository.existsById(id)) {
             repository.deleteById(id);
-            InterviewQueuePayload payload = mapper.toContactQueuePayload(id);
-            rabbitMQService.publishToContactQueue(payload);
+            InterviewQueuePayload payload = mapper.toInterviewQueuePayload(id);
+            rabbitMQService.publishToInteviewQueue(payload);
             return true;
         }
         return false;
