@@ -5,7 +5,7 @@ export interface Interview {
   jobId: string;
   companyName: string;
   positionTitle: string;
-  dateTime: Date;
+  dateTime: string;
   type: InterviewType;
   notes?: string;
   preparationDetails?: string;
@@ -15,7 +15,7 @@ export interface InterviewFormData {
   jobId: string;
   companyName: string;
   positionTitle: string;
-  dateTime: Date;
+  dateTime: string;
   type: InterviewType;
   notes?: string;
   preparationDetails?: string;

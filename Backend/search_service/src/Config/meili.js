@@ -45,7 +45,6 @@ const deleteIndex = async (indexName) => {
 
 })();
 
-//deleteIndex('contacts')
 
 (async () => {
   await createFilter(['interviews'],['date','dateTime','type']);
@@ -56,6 +55,9 @@ const deleteIndex = async (indexName) => {
   await createFilter(['users', 'contacts', 'applications', 'interviews'],['createdAt', 'updatedAt']);
   console.log('User, Contact, Application, and Interview Filters created successfully');
 })();
+
+
+//deleteIndex('interviews')
 
 
 

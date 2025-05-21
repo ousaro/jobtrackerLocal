@@ -16,7 +16,7 @@ public class InterviewResponse {
     private String jobId;
     private String companyName;
     private String positionTitle;
-    private LocalDateTime dateTime;
+    private String dateTime;
     private String type;
     private String notes;
     private String preparationDetails;

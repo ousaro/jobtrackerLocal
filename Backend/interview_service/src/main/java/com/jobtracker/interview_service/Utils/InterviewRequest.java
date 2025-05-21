@@ -12,7 +12,7 @@ public class InterviewRequest {
     private String jobId;
     private String companyName;
     private String positionTitle;
-    private LocalDateTime dateTime;
+    private String dateTime;
     private String type; // ONLINE, ONSITE, PHONE
     private String notes;
     private String preparationDetails;
