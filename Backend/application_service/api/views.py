@@ -40,7 +40,10 @@ class JobApplicationListCreateView(ListCreateAPIView):
         # Publish to application index queue
         data = {
             "id": applicationData["id"],
-            "position_title": applicationData["position_title"]
+            "position_title": applicationData["position_title"],
+            "company_name": applicationData["company_name"],
+            "status": applicationData["status"],
+            "location": applicationData["location"],
         }
         payload = {"action": "create", "data": data}
         publish_to_app_queue(
@@ -53,16 +56,29 @@ class JobApplicationRetrieveUpdateDestroyView(RetrieveUpdateDestroyAPIView):
     #permission_classes = [IsAuthenticated]
 
     def perform_update(self, serializer):
+        # Get the original value BEFORE the update
+        instance = serializer.instance
+        previous_status = instance.status
+
+        # Update the instance
         application = serializer.save()
+
+        applicationData = JobApplicationSerializer(application).data
+
+        event_payload = applicationData.copy()
+        event_payload["previousStatus"] = previous_status
         publish_event(
             settings.RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED, 
-            JobApplicationSerializer(application).data
+            event_payload
         )
-        applicationData = JobApplicationSerializer(application).data
+       
         # Publish to application index queue
         data = {
             "id": applicationData["id"],
-            "position_title": applicationData["position_title"]
+            "position_title": applicationData["position_title"],
+            "company_name": applicationData["company_name"],
+            "status": applicationData["status"],
+            "location": applicationData["location"],
         }
         payload = {"action": "create", "data": data}
         publish_to_app_queue(

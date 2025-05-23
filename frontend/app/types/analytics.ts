@@ -1,4 +1,14 @@
+import { Application } from "./application";
 import { Interview } from "./interview";
+
+export interface AnalyticsDataSummary {
+  totalApplications: number;
+  totalInterviews: number;
+  lastApplicationIds: string[];
+  lastInterviewIds: string[];
+  applicationStatusCounts: Record<string, number>;
+}
+
 
 export interface AnalyticsData {
   applicationsOverTime: {
@@ -20,8 +30,4 @@ export interface DashboardStats {
 export interface DashboardContent {
   upcomingInterviews: Interview[];
   recentApplications: Application[];
-}
-
-interface Application {
-
 }

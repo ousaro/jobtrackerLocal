@@ -3,7 +3,9 @@ export type JobStatus =
   | 'APPLIED' 
   | 'INTERVIEW_SCHEDULED'
   | 'OFFER_RECEIVED'
+  | 'HIRED'
   | 'REJECTED';
+
 
 export type JobLocation = 'REMOTE' | 'ONSITE' | 'HYBRID';
 

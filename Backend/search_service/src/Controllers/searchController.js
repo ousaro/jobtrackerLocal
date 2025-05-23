@@ -4,7 +4,7 @@ const axios = require("axios");
 const highlightPerType = {
   users: ['fullName'],
   contacts: ['fullName', 'phone'],
-  applications: ['position_title'],
+  applications: ['position_title',"company_name","location","status"],
   interviews: ['type',"dateTime","date"],
 }
 
@@ -15,6 +15,12 @@ const filterableFields = {
   dateTime: 'date',
   date: 'date',
   type: 'string',
+  status: 'string',
+  position_title: 'string',
+  company_name: 'string',
+  location: 'string',
+  fullName: 'string',
+  phone: 'string',
 
 };
 

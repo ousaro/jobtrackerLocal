@@ -2,43 +2,19 @@
 
 import { Card } from '../../components/ui/card';
 import {
-  Briefcase,
   CalendarDays,
-  CheckCircle2,
-  XCircle,
-  Clock,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { DashboardStats } from '../types';
-import { useEffect, useState } from 'react';
-import { getTokenClaims } from '../../utils/tokenService';
-import { getProfileByEmail } from '../../api/userApi/userApi';
+import { Application, Interview } from '../types';
+import {  useState } from 'react';
 
-const mockStats: DashboardStats = {
-  inProgress: 12,
-  offers: 2,
-};
-
-const mockDashboardContent = {
-  upcomingInterviews: [
-    // Add mock data for upcoming interviews
-    // { id: 1, date: '2023-10-01', time: '10:00 AM', company: 'Tech Corp' },
-    // { id: 2, date: '2023-10-05', time: '2:00 PM', company: 'Web Solutions' },
-  ],
-  recentApplications: [
-    // Add mock data for recent applications    
-    // { id: 1, date: '2023-09-25', company: 'Startup Inc.' },
-    // { id: 2, date: '2023-09-20', company: 'Innovate Ltd.' }
-  ],
-}
 
 
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [stats] = useState<DashboardStats>(mockStats);
-  const [dashboardContent] = useState(mockDashboardContent);
-
+  const [lastApplication, setLastApplication] = useState<Application[]>()
+  const [lastInterview, setLastInterview] = useState<Interview[]>()
 
   return (
     <div className="space-y-8">
@@ -47,24 +23,6 @@ export default function DashboardPage() {
         <p className="text-muted-foreground">
           Welcome back {user?.fullName} ! Here&apos;s an overview of your job search progress.
         </p>
-      </div>
-
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card className="p-6">
-          <div className="flex items-center space-x-2">
-            <Clock className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium">In Progress</h3>
-          </div>
-          <p className="text-2xl font-bold">{stats.inProgress}</p>
-        </Card>
-        <Card className="p-6">
-          <div className="flex items-center space-x-2">
-            <CheckCircle2 className="h-4 w-4 text-muted-foreground" />
-            <h3 className="text-sm font-medium">Offers</h3>
-          </div>
-          <p className="text-2xl font-bold">{stats.offers}</p>
-        </Card>
-
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -114,7 +72,11 @@ export default function DashboardPage() {
             </div>
           </div>
         </Card>
+
+        
       </div>
+      
+                
     </div>
   );
 }

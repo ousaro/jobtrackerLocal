@@ -45,6 +45,7 @@ const statusColors: Record<JobStatus, string> = {
   INTERVIEW_SCHEDULED: 'bg-yellow-500',
   OFFER_RECEIVED: 'bg-green-500',
   REJECTED: 'bg-red-500',
+  HIRED: 'bg-purple-500',
 };
 
 const statusLabels: Record<JobStatus, string> = {
@@ -53,6 +54,7 @@ const statusLabels: Record<JobStatus, string> = {
   INTERVIEW_SCHEDULED: 'Interview',
   OFFER_RECEIVED: 'Offer',
   REJECTED: 'Rejected',
+  HIRED: 'Hired',
 };
 
 const locationLabels: Record<JobLocation, string> = {
@@ -153,10 +155,17 @@ export default function ApplicationsPage() {
       fetchSearchResults(query);
     }, 300);
   
+    const getQuery = (status: JobStatus | "ALL") => {
+      const trimmedSearch = search.trim();
+      if (status === "ALL") return trimmedSearch;
+      return trimmedSearch ? `${trimmedSearch}&status="${status}"` : `status="${status}"`;
+    };
+
     useEffect(() => {
-      debouncedSearch(search);
+      const query = getQuery(statusFilter)
+      debouncedSearch(query);
       return () => debouncedSearch.cancel();
-    }, [search]);
+    }, [search,statusFilter]);
   
     // Handle input change
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {

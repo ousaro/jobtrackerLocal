@@ -29,5 +29,9 @@ export enum Services{
     // Interview
     INTERVIEW = 'interview-service/interviews',
     INTERVIEW_BY_IDS = 'ids',
+
+    // Analytics
+    ANALYTICS = 'analytics-service/analytics',
+    ANALYTICS_SUMMARY = 'summary',
     
 }

@@ -52,6 +52,11 @@ const deleteIndex = async (indexName) => {
 })();
 
 (async () => {
+  await createFilter(['applications'],['status']);
+  console.log('Application Filter created successfully');
+})();
+
+(async () => {
   await createFilter(['users', 'contacts', 'applications', 'interviews'],['createdAt', 'updatedAt']);
   console.log('User, Contact, Application, and Interview Filters created successfully');
 })();

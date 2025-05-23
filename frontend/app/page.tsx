@@ -3,9 +3,10 @@
 import { Button } from '../components/ui/button';
 import { Card } from '../components/ui/card';
 import { ThemeToggle } from '../components/theme-toggle';
-import { Briefcase } from 'lucide-react';
+import { Briefcase, PieChart } from 'lucide-react';
 import Link from 'next/link';
 import { withGuest } from '../components/withAuth';
+
 
 function Home() {
   return (
@@ -60,6 +61,7 @@ function Home() {
               <Link href="/login">Log In</Link>
             </Button>
           </div>
+          
         </div>
       </main>
     </div>

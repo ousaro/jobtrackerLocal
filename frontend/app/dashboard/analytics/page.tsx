@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Card } from '../../../components/ui/card';
 import {
   BarChart,
@@ -13,9 +14,53 @@ import {
   Pie,
   Cell,
 } from 'recharts';
-import { AnalyticsData } from '../../types';
+import { getSummary } from '../../../api/analyticsApi/analyticsApi';
+import { AnalyticsDataSummary } from '../../types';
 
-const applicationData: AnalyticsData['applicationsOverTime'] = [
+
+const initialData = {
+  totalApplications: 0,
+  totalInterviews: 0,
+  lastApplicationIds: [],
+  lastInterviewIds: [],
+  applicationStatusCounts: {}
+}
+
+
+export default function AnalyticsPage() {
+  const [analyticsData, setAnalyticsData] = useState<AnalyticsDataSummary>(initialData);
+
+  useEffect(() => {
+    const fetchAnalytics = async () => {
+      try {
+        const response = await getSummary();
+        
+        setAnalyticsData(response);
+      } catch (error) {
+        console.error('Failed to fetch analytics data:', error);
+      }
+    };
+
+    fetchAnalytics();
+  }, []);
+
+  if (!analyticsData) {
+    return <p>Loading...</p>;
+  }
+
+
+  const applicationStatusCounts = analyticsData.applicationStatusCounts || {};
+
+  const applicationData = Object.entries(applicationStatusCounts).map(([name, value]) => ({
+    name,
+    value: typeof value === 'number' ? value : 0,  // Force to number
+
+    color: getColorForStatus(name)
+  })).filter(d => d.value > 0);
+
+  console.log('applicationData:', applicationData);
+
+ const applicationDataMock = [
   { month: 'Jan', applications: 8 },
   { month: 'Feb', applications: 12 },
   { month: 'Mar', applications: 15 },
@@ -24,15 +69,13 @@ const applicationData: AnalyticsData['applicationsOverTime'] = [
   { month: 'Jun', applications: 14 },
 ];
 
-const statusData: AnalyticsData['applicationStatus'] = [
-  { name: 'Applied', value: 24, color: 'hsl(var(--chart-1))' },
-  { name: 'Interview', value: 12, color: 'hsl(var(--chart-2))' },
-  { name: 'Offer', value: 2, color: 'hsl(var(--chart-3))' },
-  { name: 'Rejected', value: 10, color: 'hsl(var(--chart-4))' },
+const statusDataMock = [
+  { name: 'Applied', value: 24, color: '#8884d8' },
+  { name: 'Interview', value: 12, color: '#82ca9d' },
+  { name: 'Offer', value: 2, color: '#ffc658' },
+  { name: 'Rejected', value: 10, color: '#ff8042' },
 ];
 
-
-export default function AnalyticsPage() {
   return (
     <div className="space-y-6">
       <div>
@@ -47,7 +90,7 @@ export default function AnalyticsPage() {
           <h2 className="text-lg font-semibold mb-4">Applications Over Time</h2>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={applicationData}>
+              <BarChart data={applicationDataMock}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -61,49 +104,61 @@ export default function AnalyticsPage() {
         <Card className="p-6">
           <h2 className="text-lg font-semibold mb-4">Application Status</h2>
           <div className="h-[300px]">
+            
+
+           {applicationData.length > 0 ? (
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={statusData}
+                  data={applicationData}
+                  dataKey="value"
+                  nameKey="name"
                   cx="50%"
                   cy="50%"
                   outerRadius={100}
-                  dataKey="value"
                   label={({ name, value }) => `${name}: ${value}`}
                 >
-                  {statusData.map((entry, index) => (
+                  {applicationData.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+          ) : (
+            <p>No data available for pie chart.</p>
+          )}
+
           </div>
         </Card>
 
         <Card className="p-6">
-          <h2 className="text-lg font-semibold mb-4">Key Metrics</h2>
+          <h2 className="text-lg font-semibold mb-4">Global Overview</h2>
           <div className="grid grid-cols-2 gap-4">
             <div className="p-4 rounded-lg bg-secondary">
-              <p className="text-sm text-muted-foreground">Response Rate</p>
-              <p className="text-2xl font-bold">45%</p>
+              <p className="text-sm text-muted-foreground">Total Applications</p>
+              <p className="text-2xl font-bold">{analyticsData.totalApplications}</p>
             </div>
             <div className="p-4 rounded-lg bg-secondary">
-              <p className="text-sm text-muted-foreground">Interview Rate</p>
-              <p className="text-2xl font-bold">25%</p>
+              <p className="text-sm text-muted-foreground">Total Interviews</p>
+              <p className="text-2xl font-bold">{analyticsData.totalInterviews}</p>
             </div>
-            <div className="p-4 rounded-lg bg-secondary">
-              <p className="text-sm text-muted-foreground">Average Response Time</p>
-              <p className="text-2xl font-bold">5 days</p>
-            </div>
-            <div className="p-4 rounded-lg bg-secondary">
-              <p className="text-sm text-muted-foreground">Offer Rate</p>
-              <p className="text-2xl font-bold">8%</p>
-            </div>
+
           </div>
         </Card>
-       
       </div>
     </div>
   );
+}
+
+function getColorForStatus(status: string) {
+  const colors: Record<string, string> = {
+    SAVED: 'hsl(var(--chart-1))',
+    APPLIED: 'hsl(var(--chart-2))',
+    INTERVIEW_SCHEDULED: 'hsl(var(--chart-3))',
+    OFFER_RECEIVED: 'hsl(var(--chart-4))',
+    REJECTED: 'hsl(var(--chart-5))',
+    HIRED: 'hsl(var(--chart-6))',
+  };
+  return colors[status] || 'hsl(var(--chart-default))';
 }

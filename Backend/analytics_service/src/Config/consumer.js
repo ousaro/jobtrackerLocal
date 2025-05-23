@@ -1,4 +1,5 @@
 const amqp = require('amqplib');
+const { updateAnalytics, getAnalyticsSummary } = require('../Controllers/analyticsController');
 require('dotenv').config();
 
 async function start() {
@@ -34,39 +35,45 @@ async function start() {
         await ch.bindQueue(q.queue, exchange, key);
     }
 
-    // In-memory state for demo (replace with DB for real use)
-    let applications = [];
-    let interviews = [];
 
     ch.consume(q.queue, async msg => {
         if (!msg) return;
         const routingKey = msg.fields.routingKey;
         const data = JSON.parse(msg.content.toString());
 
-        // Track by routing key
+        let analyticsUpdate = {};
+        let isCreated = false;
+
+        // Application events
         if (routingKey === (process.env.ROUTING_KEY_APP_CREATED || 'application.created')) {
-            applications.push(data);
-        } else if( routingKey === (process.env.ROUTING_KEY_APP_UPDATED || 'application.updated')) {
-            // Find/update application by id, if exists; else push
-            const idx = applications.findIndex(x => x.id === data.id);
-            if (idx >= 0) applications[idx] = data;
-            else applications.push(data);
-        }else if (routingKey === (process.env.ROUTING_KEY_ITV_CREATED || 'interview.created')) {
-            interviews.push(data);
-        } else if (routingKey === (process.env.ROUTING_KEY_ITV_UPDATED || 'interview.updated')) {
-            // Find/update interview by id, if exists; else push
-            const idx = interviews.findIndex(x => x.id === data.id);
-            if (idx >= 0) interviews[idx] = data;
-            else interviews.push(data);
+            analyticsUpdate.applicationId = data.id;
+            analyticsUpdate.status = data.status;
+            isCreated = true;
+            
+        }
+        if (routingKey === (process.env.ROUTING_KEY_APP_UPDATED || 'application.updated')) {
+            analyticsUpdate.applicationId = data.id;
+            analyticsUpdate.status = data.status;
+            analyticsUpdate.previousStatus = data.previousStatus;
+
+        }
+
+        // Interview events
+        if (routingKey === (process.env.ROUTING_KEY_ITV_CREATED || 'interview.created')) {
+            analyticsUpdate.interviewId = data.id;
+            isCreated = true;
+        }
+        if (routingKey === (process.env.ROUTING_KEY_ITV_UPDATED || 'interview.updated')) {
+            analyticsUpdate.interviewId = data.id;
+        }
+
+        if (analyticsUpdate.applicationId || analyticsUpdate.interviewId) {
+            
+            await updateAnalytics(analyticsUpdate, isCreated);
         }
 
         // Prepare rolling summary
-        const summary = {
-            totalApplications: applications.length,
-            totalInterviews: interviews.length,
-            lastApplication: applications[applications.length - 1],
-            lastInterview: interviews[interviews.length - 1]
-        };
+        const summary = await getAnalyticsSummary();
 
         // Publish summary
         await ch.publish(
