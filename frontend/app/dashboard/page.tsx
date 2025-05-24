@@ -5,16 +5,12 @@ import {
   CalendarDays,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { Application, Interview } from '../types';
-import {  useState } from 'react';
 
 
 
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [lastApplication, setLastApplication] = useState<Application[]>()
-  const [lastInterview, setLastInterview] = useState<Interview[]>()
 
   return (
     <div className="space-y-8">

@@ -91,44 +91,6 @@ export default function SettingsPage() {
 
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-4">
-                  <Smartphone className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <Label htmlFor="pushNotifications">Push Notifications</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive push notifications on your device
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id="pushNotifications"
-                  checked={settings.pushNotifications}
-                  onCheckedChange={(checked) =>
-                    setSettings({ ...settings, pushNotifications: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Bell className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <Label htmlFor="applicationUpdates">Application Updates</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Get notified about application status changes
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id="applicationUpdates"
-                  checked={settings.applicationUpdates}
-                  onCheckedChange={(checked) =>
-                    setSettings({ ...settings, applicationUpdates: checked })
-                  }
-                />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
                   <Bell className="h-5 w-5 text-muted-foreground" />
                   <div>
                     <Label htmlFor="interviewReminders">Interview Reminders</Label>
@@ -146,24 +108,6 @@ export default function SettingsPage() {
                 />
               </div>
 
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-4">
-                  <Mail className="h-5 w-5 text-muted-foreground" />
-                  <div>
-                    <Label htmlFor="weeklyDigest">Weekly Digest</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Receive a weekly summary of your job search progress
-                    </p>
-                  </div>
-                </div>
-                <Switch
-                  id="weeklyDigest"
-                  checked={settings.weeklyDigest}
-                  onCheckedChange={(checked) =>
-                    setSettings({ ...settings, weeklyDigest: checked })
-                  }
-                />
-              </div>
             </div>
           </div>
         </Card>
@@ -200,7 +144,7 @@ export default function SettingsPage() {
 
             <Separator />
 
-            <div className="space-y-4">
+            {/* <div className="space-y-4">
               <div>
                 <Label>Time Zone</Label>
                 <Select
@@ -247,7 +191,7 @@ export default function SettingsPage() {
                   </SelectContent>
                 </Select>
               </div>
-            </div>
+            </div> */}
           </div>
         </Card>
 

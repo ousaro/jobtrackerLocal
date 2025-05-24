@@ -1,4 +1,5 @@
 const Analytics = require('../Models/AnalyticsModel');
+const { getApplicationsByIds, getInterviewsByIds } = require('../Config/getServices');
 
 async function updateAnalytics({ 
     applicationId, 
@@ -9,8 +10,15 @@ async function updateAnalytics({
     const analytics = await Analytics.findById('main') || new Analytics({ _id: 'main' });
 
     if (applicationId) {
-        console.log('isCreated:', isCreated);
-        if (isCreated) analytics.totalApplications++;
+        if (isCreated) {
+            analytics.totalApplications++;
+
+            // MONTHLY: get key and increment counter
+            const now = new Date();
+            const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            let currentMonthValue = analytics.monthlyApplications.get(monthKey) || 0;
+            analytics.monthlyApplications.set(monthKey, currentMonthValue + 1);
+        }
         analytics.lastApplicationIds = pushUniqueId(analytics.lastApplicationIds || [], applicationId);
 
         // Increment the new/current status count
@@ -47,7 +55,12 @@ const getAnalyticsSummary = async () => {
                     ? (analytics.applicationStatusCounts instanceof Map
                         ? Object.fromEntries(analytics.applicationStatusCounts)
                         : analytics.applicationStatusCounts)
-                    : {}  // Ensure plain JS object for Map
+                    : {},
+                monthlyApplications: analytics.monthlyApplications
+                    ? (analytics.monthlyApplications instanceof Map
+                        ? Object.fromEntries(analytics.monthlyApplications)
+                        : analytics.monthlyApplications)
+                    : {}
             }
         }
     } catch (error) {
@@ -57,7 +70,8 @@ const getAnalyticsSummary = async () => {
             totalInterviews: 0,
             lastApplicationIds: [],
             lastInterviewIds: [],
-            applicationStatusCounts: {}
+            applicationStatusCounts: {},
+            monthlyApplications: {}
         };
     }
 
@@ -68,15 +82,34 @@ const getAnalyticsSummary = async () => {
 const getAnalyticsDataSummary = async (req,res) => {
     try{
         const analytics = await Analytics.findById('main').lean();
-        if (analytics) {
-            res.status(200).json(analytics);
-        }
+        if (!analytics) return res.status(404).json({ error: 'Analytics data not found' });
+
+        // get the last 2 application and interview 
+        const lastApplications = await getApplications(analytics.lastApplicationIds || []);
+        const lastInterviews = await getInterviews(analytics.lastInterviewIds || []);
+        const summary = {...analytics, lastApplications, lastInterviews};
+        delete summary._id; // Remove _id for cleaner response
+        delete summary.__v; // Remove __v for cleaner response
+        delete summary.updatedAt; // Remove updatedAt for cleaner response
+
+        res.status(200).json(summary);
+
     } catch (error) {
         console.error('Error fetching analytics:', error);
         res.status(500).json({ error: 'Error fetching analytics' });
     }
 
     
+}
+
+const getApplications = async (ids) => {
+    if (!ids || ids.length === 0) return []
+    return await getApplicationsByIds(ids);
+}
+
+const getInterviews = async (ids) => {
+    if (!ids || ids.length === 0) return [];
+    return await getInterviewsByIds(ids);
 }
 
 

@@ -71,12 +71,12 @@ function DashboardLayout({
   }
 
   const navItems: NavItem[] = [
-    { title: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { title: 'Overview', href: '/dashboard/analytics', icon: LayoutDashboard },
     { title: 'Profiles', href: '/dashboard/profiles', icon: Users },
     { title: 'Applications', href: '/dashboard/applications', icon: FileText },
     { title: 'Interviews', href: '/dashboard/interviews', icon: CalendarDays },
     { title: 'Contacts', href: '/dashboard/contacts', icon: BookUser },
-    { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart },
+    // { title: 'Analytics', href: '/dashboard/analytics', icon: BarChart },
     { title: 'Profile', href: `/dashboard/profiles/${user.id}`, icon: User },
     { title: 'Settings', href: '/dashboard/settings', icon: Settings },
   ];

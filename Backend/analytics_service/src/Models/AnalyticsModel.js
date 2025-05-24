@@ -13,6 +13,11 @@ const analyticsSchema = new mongoose.Schema({
         of: Number,
         default: {} 
     },
+    monthlyApplications: {
+        type: Map,     // key: 'YYYY-MM', value: Number
+        of: Number,
+        default: {}
+    },
     updatedAt: { type: Date, default: Date.now }
 });
 

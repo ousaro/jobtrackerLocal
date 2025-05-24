@@ -6,7 +6,10 @@ export interface AnalyticsDataSummary {
   totalInterviews: number;
   lastApplicationIds: string[];
   lastInterviewIds: string[];
+  lastApplications: Application[];
+  lastInterviews: Interview[];
   applicationStatusCounts: Record<string, number>;
+  monthlyApplications: Record<string, number>;
 }
 
 
