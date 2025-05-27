@@ -14,8 +14,8 @@ target/
 .sts4-cache
 
 # Spring config files (ignore everywhere)
-**/application.yml
-**/application.properties
+# **/application.yml
+# **/application.properties
 
 
 ### IntelliJ IDEA ###

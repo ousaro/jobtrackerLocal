@@ -1,0 +1,33 @@
+server:
+port: 8080
+address: 0.0.0.0 # Accessible from outside the container
+
+spring:
+application:
+  name: auth-service
+
+services:
+  profile-service:
+    name: user-service
+    url: http://${spring.services.profile-service.name}/users/profile/
+
+security:
+  oauth2:
+    resourceserver:
+      jwt:
+        public-key-location: classpath:public.pem
+        expiration: 604800000 # JWT expiration time (7 days in ms)
+
+cloud:
+  consul:
+    host: consul # Docker Compose Consul service name
+    port: 8500
+
+    discovery:
+      hostname: auth-service
+      port: ${server.port}
+      register: true
+      health-check-path: /health
+      health-check-interval: 10s
+      service-name: auth-service
+      instance-id: ${spring.application.name}-${random.value}
