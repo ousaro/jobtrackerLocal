@@ -22,9 +22,37 @@ services:
     image: consul:1.15
     ports:
       - "8500:8500"
+      - "8600:8600/udp"
+      - "8600:8600/tcp"
     networks: 
+      jbt-network:
+        ipv4_address: 172.30.0.10
+    command: agent -dev -client=0.0.0.0 -advertise=172.30.0.10
+
+  kong:
+    image: kong:3.5
+    depends_on:
+      - consul
+      - rabbitmq
+    environment:
+      KONG_DATABASE: "off" # Use DB-less mode
+      KONG_DECLARATIVE_CONFIG: "/kong/kong.yml"
+      KONG_PG_HOST: kong-db
+      KONG_PG_USER: kong
+      KONG_PG_PASSWORD: kong
+      KONG_PROXY_ACCESS_LOG: /dev/stdout
+      KONG_ADMIN_ACCESS_LOG: /dev/stdout
+      KONG_PROXY_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_ERROR_LOG: /dev/stderr
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001, 0.0.0.0:8444 ssl
+    ports:
+      - "8000:8000"   # public gateway
+      - "8001:8001"   # admin API
+    volumes:
+      - ../Kong/kong.yml:/kong/kong.yml
+      - ../Kong/kong.conf:/kong/kong.conf
+    networks:
       - jbt-network
-    command: agent -dev -client=0.0.0.0
 
   # Auth Service (using PostgresDB)
   auth-db:
@@ -44,11 +72,12 @@ services:
       retries: 5
 
   auth-service:
-    build: ./Auth_Service
+    image: mezlin/auth-service:1
     depends_on:
       - auth-db
       - rabbitmq
       - consul
+      - kong
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://auth-db:5432/authdb
       SPRING_DATASOURCE_USERNAME: postgres
@@ -111,21 +140,25 @@ services:
 
 
   user-service:
-    build: ./User_Service
+    image: mezlin/user-service:1.1.0
     ports:
       - "5001:5001"
     environment:
-      # Use the service name as the hostname not the container name
       MONGO_URI: mongodb://oumeri:PantryScanner2024@user-db:27017/Users?authSource=admin
-      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672 # Use the service name as the hostname not localhost in the container
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672 
       USER_QUEUE: user.index
-      CONSUL_HOST: consul
       SERVICE_HOST: user-service
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      SERVICE_ID: user-service
+      SERVICE_NAME: user-service
+      AUTH_SERVICE: auth-service
       PORT: 5001
     depends_on:
       - user-db
       - rabbitmq
       - consul
+      - kong
     networks:
       - jbt-network
   
@@ -166,20 +199,30 @@ services:
       - jbt-network
 
   contact-service:
-    build: ./contact_service
+    image: mezlin/contact-service:1.1.0
     ports:
       - "5004:5004"
     depends_on:
       - contact-db
       - rabbitmq
       - consul
+      - kong
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://oumeri:PantryScanner2024@contact-db:27017/Contacts?authSource=admin
+      SPRING_DATA_MONGODB_USERNAME: oumeri
+      SPRING_DATA_MONGODB_PASSWORD: PantryScanner2024
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
+      SPRING_RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      SPRING_RABBITMQ_CONTACT_QUEUE: contact.index
+      JOBTRACKER_RABBITMQ_EXCHANGE: jobtracker.exchange
+      JOBTRACKER_RABBITMQ_EXCHANGE_TYPE: topic
+      JOBTRACKER_RABBITMQ_ROUTING_KEY_CONTACT_CREATED: contact.created
+      JOBTRACKER_RABBITMQ_ROUTING_KEY_CONTACT_UPDATED: contact.updated
       SPRING_CLOUD_CONSUL_HOST: consul
+      SPRING_CLOUD_CONSUL_PORT: 8500
     restart: unless-stopped
     networks:
       - jbt-network
@@ -203,23 +246,31 @@ services:
       retries: 5
 
   search-service:
-    build: ./search_service
+    image: mezlin/search-service:1.1.0
     ports:
       - "5009:5009"
     environment:
       MEILI_HOST: http://meilisearch:7700
       MEILI_KEY: masterKey
-      RABBITMQ_URL: amqp://rabbitmq:5672
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_EXCHANGE: jobtracker.exchange
+      RABBITMQ_EXCHANGE_TYPE: topic
       USER_QUEUE: user.index
       CONTACT_QUEUE: contact.index
       APP_QUEUE: application.index
+      INTERVIEW_QUEUE: interview.index
       PORT: 5009
+      SERVICE_HOST: search-service
       CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      SERVICE_ID: search-service
+      SERVICE_NAME: search-service
     restart: unless-stopped
     depends_on:
       - meilisearch
       - rabbitmq
       - consul
+      - kong
     networks:
       - jbt-network
 
@@ -259,24 +310,126 @@ services:
       - jbt-network
 
   interview-service:
-    build: ./interview_service
+    image: mezlin/interview-service:1.1.0
     ports:
       - "5003:5003"
     depends_on:
       - interview-db
       - rabbitmq
       - consul
+      - kong
     environment:
       SPRING_DATA_MONGODB_URI: mongodb://oumeri:PantryScanner2024@interview-db:27017/Interviews?authSource=admin
+      SPRING_DATA_MONGODB_USERNAME: oumeri
+      SPRING_DATA_MONGODB_PASSWORD: PantryScanner2024
       SPRING_RABBITMQ_HOST: rabbitmq
       SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      JOBTRACKER_RABBITMQ_EXCHANGE: jobtracker.exchange
+      JOBTRACKER_RABBITMQ_EXCHANGE_TYPE: topic
+      JOBTRACKER_RABBITMQ_ROUTING_KEY_INTERVIEW_CREATED: interview.created
+      JOBTRACKER_RABBITMQ_ROUTING_KEY_INTERVIEW_UPDATED: interview.updated
       SPRING_RABBITMQ_USERNAME: guest
       SPRING_RABBITMQ_PASSWORD: guest
       SPRING_CLOUD_CONSUL_HOST: consul
+      SPRING_CLOUD_CONSUL_PORT: 8500
     restart: unless-stopped
     networks:
       - jbt-network
 
+  # Application Service (using MongoDB)
+  application-db:
+    image: mongo:6
+    container_name: application-db
+    ports:
+      - "27020:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: oumeri
+      MONGO_INITDB_ROOT_PASSWORD: PantryScanner2024
+    volumes:
+      - application_data:/data/db
+    networks:
+      - jbt-network
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+  
+  mongo-express-application:
+    image: mongo-express:1.0.2
+    container_name: mongo-express-application
+    restart: unless-stopped
+    ports:
+      - "8084:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: oumeri
+      ME_CONFIG_MONGODB_ADMINPASSWORD: PantryScanner2024
+      ME_CONFIG_MONGODB_SERVER: application-db
+    depends_on:
+      - application-db
+    networks:
+      - jbt-network
+    
+  application-service:
+    image: mezlin/application-service:1
+    ports:
+      - "5002:5002"
+    environment:
+      SERVICE_HOST: application-service
+      SERVICE_ID: application-service
+      SERVICE_NAME: application-service
+      MONGO_URI: mongodb://oumeri:PantryScanner2024@application-db:27017/Applications?authSource=admin
+      MONGO_DB: Applications
+      MONGO_HOST: application-db
+      MONGO_PORT: 27017
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672 
+      APP_QUEUE: application.index
+      RABBITMQ_EXCHANGE: jobtracker.exchange
+      RABBITMQ_EXCHANGE_TYPE: topic
+      RABBITMQ_ROUTING_KEY_APPLICATION_CREATED: application.created
+      RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED: application.update
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      SECRET_KEY: "django-insecure-9teo^f1ntby*zv2riy+kyv8lnm7&va_!g_jeckw+#-i3tu8l7s"
+      PORT: 5002
+    depends_on:
+      - application-db
+      - rabbitmq
+      - consul
+      - kong
+    networks:
+      - jbt-network
+      
+  # Analytics Service
+  analytics-service:
+    image: mezlin/analytics-service:1
+    ports:
+      - "5005:5005"
+    environment:
+      SERVICE_HOST: analytics-service
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672
+      EXCHANGE_NAME: jobtracker.exchange
+      EXCHANGE_TYPE: topic
+      QUEUE_ANALYTICS:
+      ROUTING_KEY_APP_CREATED: application.created
+      ROUTING_KEY_APP_UPDATED: application.update
+      ROUTING_KEY_ITV_CREATED: interview.created
+      ROUTING_KEY_ITV_UPDATED: interview.updated
+      ROUTING_KEY_ANALYTICS_SUMMARY: analytics.summary
+      PREFETCH_COUNT: 10
+      CONSUL_HOST: consul
+      CONSUL_PORT: 8500
+      SERVICE_ID: analytics-service
+      SERVICE_NAME: analytics-service
+    depends_on:
+      - rabbitmq
+      - consul
+      - kong
+    networks:
+      - jbt-network
+    
 
 networks:
   jbt-network:
