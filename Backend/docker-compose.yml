@@ -72,7 +72,7 @@ services:
       retries: 5
 
   auth-service:
-    image: mezlin/auth-service:1
+    image: mezlin/auth-service:1.1.0
     depends_on:
       - auth-db
       - rabbitmq
@@ -442,3 +442,4 @@ volumes:
   authdb_data:
   pgadmin_data:
   meili_data:
+  application_data:
