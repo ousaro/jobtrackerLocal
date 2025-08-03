@@ -1,3 +1,46 @@
+# 🧑‍🤝‍🧑 Contact Service
+
+**Contact Service** is a Spring Boot microservice responsible for **managing user contacts** in the JobTracker application. It provides:
+
+-  Contact creation, retrieval, updating, and deletion
+-  Search functionality for user contacts
+-  Integration with other microservices for user data
+
+Built with Spring Boot, and MongoDB for robust contact management.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework:** Spring Boot 3.4.4
+- **Database:** MongoDB
+- **ORM:** Spring Data MongoDB
+- **Service Discovery:** Consul
+- **Build Tool:** Maven
+- **Java Version:** JDK 17
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Java 17 or higher
+- Maven 3.6+
+- MongoDB database
+- Consul (for service discovery)
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/ousaro/jobtrackerLocal.git
+cd jobtrackerLocal/Backend/contact_service
+```
+
+### Configure Database
+
+Create a MongoDB database for the contact service.
+
+
 ## ⚙️ Environment/Configuration Variables (`contact-service`)
 
 Add these keys and values to your `application.yaml`, `application.properties`, or set them as environment variables.
