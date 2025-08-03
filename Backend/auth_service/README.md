@@ -35,18 +35,14 @@ Built with Spring Boot, Spring Security, and PostgreSQL for robust authenticatio
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/ousaro/JobTracker.git
-cd JobTracker/Backend/auth_service
+git clone https://github.com/ousaro/jobtrackerLocal.git
+cd jobtrackerLocal/Backend/auth_service
 ```
 
 ### 2. Configure Database
 
-Create a PostgreSQL database for the auth service or use Docker:
+Create a PostgreSQL database for the auth service.
 
-```bash
-# Using Docker for PostgreSQL
-docker run --name auth-postgres -e POSTGRES_DB=auth_db -e POSTGRES_USER=auth_user -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:latest
-```
 
 ### 3. Configure Environment Variables
 
@@ -63,7 +59,7 @@ jwt.secret=your-secret-key
 jwt.expiration=86400000
 
 # Consul Configuration
-spring.cloud.consul.host=localhost
+spring.cloud.consul.host=localhost / your-ip-address
 spring.cloud.consul.port=8500
 spring.application.name=auth-service
 ```
@@ -73,54 +69,11 @@ spring.application.name=auth-service
 ```bash
 # Using Maven
 ./mvnw spring-boot:run
-
-# Or using Docker
-docker-compose up --build
 ```
 
 ### 5. Access the Service
 
 - **Auth API Endpoint:** http://localhost:8080/api/auth/
-- **Health Check:** http://localhost:8080/actuator/health
-- **API Documentation:** http://localhost:8080/swagger-ui.html (if configured)
-
----
-
-## 🛢️ Database Setup & Management
-
-The service uses **PostgreSQL** as the database. The database schema will be created automatically when the service starts.
-
-### Using Docker for Development
-
-```bash
-# Start PostgreSQL with Docker
-docker run --name auth-postgres \
-  -e POSTGRES_DB=auth_db \
-  -e POSTGRES_USER=auth_user \
-  -e POSTGRES_PASSWORD=password \
-  -p 5432:5432 \
-  -d postgres:latest
-```
-
-### Using Adminer for Database Management
-
-You can use Adminer to manage the database:
-
-```bash
-# Start Adminer
-docker run --name adminer -p 5050:8080 --link auth-postgres:db -d adminer
-```
-
-- **Adminer URL:** http://localhost:5050
-- **Connection Details:**
-
-  | Field    | Value             |
-  |----------|-------------------|
-  | System   | PostgreSQL        |
-  | Server   | db                |
-  | Username | auth_user         |
-  | Password | password          |
-  | Database | auth_db           |
 
 ---
 
@@ -132,59 +85,7 @@ docker run --name adminer -p 5050:8080 --link auth-postgres:db -d adminer
 |--------|----------|-------------|
 | POST | `/api/auth/register` | Register a new user |
 | POST | `/api/auth/login` | User login |
-| POST | `/api/auth/refresh` | Refresh JWT token |
-| POST | `/api/auth/logout` | User logout |
-| GET | `/api/auth/me` | Get current user info |
 
-### Example Requests
-
-#### Register User
-```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{
-    "username": "john_doe",
-    "email": "john@example.com",
-    "password": "securePassword123",
-    "firstName": "John",
-    "lastName": "Doe"
-  }'
-```
-
-#### Login
-```bash
-curl -X POST http://localhost:8080/api/auth/login \
-  -H "Content-Type: application/json" \
-  -d '{
-    "email": "john@example.com",
-    "password": "securePassword123"
-  }'
-```
-
----
-
-## 📁 Folder Structure
-
-```plaintext
-AuthService/
-├── src/main/java/com/example/authservice/   # Main application code
-│   ├── config/                              # Configuration classes (e.g., SecurityConfig, JWTConfig)
-│   ├── controller/                          # Controllers for Auth API (e.g., AuthController)
-│   ├── service/                             # Business logic for auth operations (e.g., AuthService)
-│   ├── model/                               # Entity classes (e.g., User, Role)
-│   ├── repository/                          # Database interaction (e.g., UserRepository)
-│   ├── security/                            # Security-related classes (e.g., JWT filters)
-│   └── util/                                # Utility classes (e.g., JWT utility, password hashing)
-├── src/main/resources/
-│   ├── application.properties               # Application configuration (e.g., DB connection, JWT secret)
-│   ├── private.pem                         # Contains private JWT key for signing tokens
-│   ├── public.pem                          # Contains public JWT key for verifying tokens
-│   └── static/                              # Static files (if needed)
-├── Dockerfile
-├── docker-compose.yml
-└── README.md
-```
----
 
 ## ⚙️ Environment/Configuration Variables (`auth-service`)
 
@@ -331,20 +232,5 @@ In the src/main/resources directory, you will find two important files for JWT c
     - Purpose: This key is used by the service to ensure that the tokens received from clients are valid and haven't been tampered with.
 
 These files should be kept secure and should not be shared publicly, as they are crucial to maintaining the integrity of the authentication process.
-
-## 📌 Notes
-
-- The service is containerized using Docker for easy deployment and local development.
-- PostgreSQL data is stored in a volume to persist across restarts.
-- This service is designed to be integrated with other microservices in a larger system.
-
----
-
-## 🧪 Future Improvements
-
-- OAuth2 / Social login integration  
-- Role-based access control (RBAC)  
-- Rate limiting & brute-force protection  
-- Unit and integration test coverage
 
 ---
