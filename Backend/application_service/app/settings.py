@@ -35,7 +35,7 @@ ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1', # For local development
     'host.docker.internal', # For Docker on Windows/Mac
-    '10.1.1.191', # For local development
+    '192.168.1.12', # For local development
 ]
 
 # RabbitMQ settings

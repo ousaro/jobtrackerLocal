@@ -1,66 +1,165 @@
-# 🛡️ AuthService
+# 🛡️ Auth Service
 
-**AuthService** is a microservice responsible for **user authentication and authorization** in a distributed system. It supports:
+**Auth Service** is a Spring Boot microservice responsible for **user authentication and authorization** in the JobTracker application. It provides:
 
 - ✅ User registration & login  
-- 🔐 Secure password management  
-- 🔄 Token generation (JWT)  
-- 🔗 Easy integration with other microservices  
+- 🔐 Secure password management with BCrypt
+- 🔄 JWT token generation and validation
+- 🔗 Service integration with other microservices
+- 📊 Consul service registration and health checks
 
-Designed with security, scalability, and modularity in mind.
+Built with Spring Boot, Spring Security, and PostgreSQL for robust authentication management.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework:** Spring Boot 3.4.4
+- **Security:** Spring Security + JWT
+- **Database:** PostgreSQL 
+- **ORM:** Spring Data JPA
+- **Service Discovery:** Consul
+- **Build Tool:** Maven
+- **Java Version:** JDK 17
 
 ---
 
 ## 🚀 Getting Started
 
-Follow these steps to set up and run the service locally:
+### Prerequisites
+- Java 17 or higher
+- Maven 3.6+
+- PostgreSQL database
+- Consul (for service discovery)
 
 ### 1. Clone the Repository
 
 ```bash
 git clone https://github.com/ousaro/JobTracker.git
-cd ./Backend/AuthService
+cd JobTracker/Backend/auth_service
 ```
 
-### 2. Start Docker
+### 2. Configure Database
 
-Ensure Docker and Docker Compose are installed and running on your system.
-
-### 3. Build and Run the Service
+Create a PostgreSQL database for the auth service or use Docker:
 
 ```bash
+# Using Docker for PostgreSQL
+docker run --name auth-postgres -e POSTGRES_DB=auth_db -e POSTGRES_USER=auth_user -e POSTGRES_PASSWORD=password -p 5432:5432 -d postgres:latest
+```
+
+### 3. Configure Environment Variables
+
+Create `application-local.properties` or set environment variables:
+
+```properties
+# Database Configuration
+spring.datasource.url=jdbc:postgresql://localhost:5432/auth_db
+spring.datasource.username=auth_user
+spring.datasource.password=password
+
+# JWT Configuration
+jwt.secret=your-secret-key
+jwt.expiration=86400000
+
+# Consul Configuration
+spring.cloud.consul.host=localhost
+spring.cloud.consul.port=8500
+spring.application.name=auth-service
+```
+
+### 4. Run the Service
+
+```bash
+# Using Maven
+./mvnw spring-boot:run
+
+# Or using Docker
 docker-compose up --build
 ```
 
-This will:
+### 5. Access the Service
 
-- Build the AuthService image
-- Start the service and its dependencies (PostgreSQL & Admin panel)
-
-### 4. Access the Service
-
-- **Auth API Endpoint:**  
-  [http://localhost:8080/api/auth/](http://localhost:8080/api/auth/)
+- **Auth API Endpoint:** http://localhost:8080/api/auth/
+- **Health Check:** http://localhost:8080/actuator/health
+- **API Documentation:** http://localhost:8080/swagger-ui.html (if configured)
 
 ---
 
-## 🛢️ Database Access & Management
+## 🛢️ Database Setup & Management
 
-The service uses **PostgreSQL** as the underlying database. The database will be initialized automatically when the service starts.
+The service uses **PostgreSQL** as the database. The database schema will be created automatically when the service starts.
 
-### 🔧 Managing the Database with Adminer
+### Using Docker for Development
 
-You can manage the database via [Adminer](http://localhost:5050):
+```bash
+# Start PostgreSQL with Docker
+docker run --name auth-postgres \
+  -e POSTGRES_DB=auth_db \
+  -e POSTGRES_USER=auth_user \
+  -e POSTGRES_PASSWORD=password \
+  -p 5432:5432 \
+  -d postgres:latest
+```
 
-- **URL:** [http://localhost:5050](http://localhost:5050)  
-- **Login Credentials:**
+### Using Adminer for Database Management
+
+You can use Adminer to manage the database:
+
+```bash
+# Start Adminer
+docker run --name adminer -p 5050:8080 --link auth-postgres:db -d adminer
+```
+
+- **Adminer URL:** http://localhost:5050
+- **Connection Details:**
 
   | Field    | Value             |
   |----------|-------------------|
-  | Server   | `db`              |
-  | Username | `auth_user`       |
-  | Password | `password`       |
-  | Database | `auth_db`         |
+  | System   | PostgreSQL        |
+  | Server   | db                |
+  | Username | auth_user         |
+  | Password | password          |
+  | Database | auth_db           |
+
+---
+
+## 📋 API Endpoints
+
+### Authentication Endpoints
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register a new user |
+| POST | `/api/auth/login` | User login |
+| POST | `/api/auth/refresh` | Refresh JWT token |
+| POST | `/api/auth/logout` | User logout |
+| GET | `/api/auth/me` | Get current user info |
+
+### Example Requests
+
+#### Register User
+```bash
+curl -X POST http://localhost:8080/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "email": "john@example.com",
+    "password": "securePassword123",
+    "firstName": "John",
+    "lastName": "Doe"
+  }'
+```
+
+#### Login
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "john@example.com",
+    "password": "securePassword123"
+  }'
+```
 
 ---
 
