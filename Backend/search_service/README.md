@@ -1,3 +1,38 @@
+#  Search Service
+
+**Search Service** is a Spring Boot microservice responsible for **managing user searches** in the JobTracker application. It provides:
+
+-  Search functionality for user contacts
+-  Search functionality for user interviews
+-  Search functionality for job applications
+-  Integration with other microservices for user data
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework:** node.js + Express.js
+- **Service Discovery:** Consul
+- **Message Queue:** RabbitMQ
+- **Search Engine:** MeiliSearch for fast, typo-tolerant search
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Node.js 14 or higher
+- npm 
+- MeiliSearch
+- RabbitMQ
+- Consul (for service discovery)
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/ousaro/jobtrackerLocal.git
+cd jobtrackerLocal/Backend/search_service
+```
+
 ## ⚙️ Environment Variables (`search-service`)
 
 Below are the environment variables required to configure and run the `search-service`.  
