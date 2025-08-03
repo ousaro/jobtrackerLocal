@@ -1,3 +1,47 @@
+#  Interview Service
+
+**Interview Service** is a Spring Boot microservice responsible for **managing user interviews** in the JobTracker application. It provides:
+
+-  Interview creation, retrieval, updating, and deletion
+-  Search functionality for user interviews
+-  Integration with other microservices for user data
+
+Built with Spring Boot, and MongoDB for robust interview management.
+
+---
+
+## 🛠️ Technology Stack
+
+- **Framework:** Spring Boot 3.4.4
+- **Database:** MongoDB
+- **ORM:** Spring Data MongoDB
+- **Service Discovery:** Consul
+- **Build Tool:** Maven
+- **Java Version:** JDK 17
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+- Java 17 or higher
+- Maven 3.6+
+- MongoDB database
+- Consul (for service discovery)
+
+### Clone the Repository
+
+```bash
+git clone https://github.com/ousaro/jobtrackerLocal.git
+cd jobtrackerLocal/Backend/interview_service
+```
+
+### Configure Database
+
+Create a MongoDB database for the interview service.
+
+
+
 ## ⚙️ Environment/Configuration Variables (`interview-service`)
 
 These are the essential configuration keys for the `interview-service`.  
