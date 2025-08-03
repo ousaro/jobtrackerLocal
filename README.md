@@ -6,17 +6,17 @@
 
 ## 🛠️ Key Features
 
-- ** Job Applications Management:**  
+- **Job Applications Management:**  
   Add, track, update, and search job applications; manage statuses (applied, interview, offer, rejected, etc.)
-- ** Interview Management:**  
+- **Interview Management:**  
   Schedule and track interviews by date/type, with filtering and details for each session
-- ** User Profiles:**  
+- **User Profiles:**  
   Comprehensive user profiles with resume, skills, experience, and social/contact links
-- ** Search & Filter:**  
+- **Search & Filter:**  
   Advanced search capabilities for applications, users, and companies with real-time filtering
-- ** Analytics:**  
+- **Analytics:**  
   Visualize job search statistics with interactive charts and progress tracking
-- ** Contact Management:**  
+- **Contact Management:**  
   Manage professional contacts and networking connections
 
 ---
