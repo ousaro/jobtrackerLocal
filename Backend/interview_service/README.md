@@ -156,10 +156,4 @@ CLOUD_CONSUL_DISCOVERY_INSTANCE_ID=
 
 ---
 
-**Tip:**  
-- When running in Docker/Kubernetes, pass these as ENV vars or use a mounted config file.  
-- Never commit secrets (passwords, keys) to source control!
-
----
-
 > [🔗 Back to main Job Tracker README](../../README.md)  
