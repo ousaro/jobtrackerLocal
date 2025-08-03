@@ -1,0 +1,25 @@
+server:
+  port: 5004
+  # address: 0.0.0.0
+
+
+spring:
+  application:
+    name: contact-service
+
+  rabbitmq:
+    contact-queue: contact.index
+
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      discovery:
+        hostname: 10.5.18.49 #host.docker.internal
+        port: ${server.port}
+        register: true
+        health-check-path: /health
+        health-check-interval: 10s
+        service-name: contact-service
+        instance-id: ${spring.application.name}-${random.value}
+
