@@ -1,1 +1,0 @@
-default_app_config = 'api.apps.ApiConfig' # This line is used to specify the default app config for the Django application.
