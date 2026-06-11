@@ -1,118 +1,99 @@
-# 📊 Analytics Service
+# Analytics Service
 
-**Analytics Service** is a Node.js microservice that provides real-time analytics and metrics for the JobTracker application. It aggregates data from various sources to deliver insights and dashboard statistics:
+Real-time analytics aggregation microservice for the JobTracker platform. Consumes application and interview events via RabbitMQ, maintains aggregate counters and status distributions, and exposes a summary endpoint for dashboard visualization.
 
--  Real-time application statistics and trends
--  Timeline analysis and forecasting
--  Data aggregation from multiple services
+## Tech Stack
 
-Built with Node.js, Express, and MongoDB for efficient data processing and analytics generation.
-
----
-
-## 🛠️ Technology Stack
-
-- **Framework:** Node.js + Express.js
+- **Runtime:** Node.js (Express 5)
 - **Database:** MongoDB (Mongoose ODM)
-- **Authentication:** JWT validation
-- **Service Discovery:** Consul
-- **Message Queue:** RabbitMQ (AMQP)
+- **Messaging:** RabbitMQ (amqplib) — topic exchange consumer
+- **Service Discovery:** HashiCorp Consul
+- **Auth:** JWT RS256 verification middleware
 
----
+## API Endpoints
 
-## 🚀 Getting Started
+All routes are prefixed via Kong at `/api/analytics-service`.
 
-### Prerequisites
-- Node.js 18+
-- MongoDB
-- Consul (for service discovery)
-- RabbitMQ (for real-time data streams)
+| Method | Path            | Description                                  |
+|--------|-----------------|----------------------------------------------|
+| GET    | `/summary`      | Aggregated analytics summary                 |
+| GET    | `/health`       | Health check for Consul                      |
 
-### 1. Clone the Repository
+### Summary Response Shape
 
-```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Backend/analytics_service
+```json
+{
+  "totalApplications": 42,
+  "totalInterviews": 18,
+  "applicationStatusCounts": {
+    "SAVED": 5,
+    "APPLIED": 20,
+    "INTERVIEW_SCHEDULED": 8,
+    "OFFER_RECEIVED": 3,
+    "REJECTED": 5,
+    "HIRED": 1
+  },
+  "monthlyApplications": {
+    "2026-01": 10,
+    "2026-02": 15,
+    "2026-03": 17
+  },
+  "lastApplications": [...],
+  "lastInterviews": [...]
+}
 ```
 
-### 2. Install Dependencies
+## Event-Driven Architecture
+
+The service listens on the `jobtracker.exchange` topic exchange and updates its aggregate counters on every event:
+
+| Event | Effect |
+|---|---|
+| `application.created` | Increments total, monthly counter, status count |
+| `application.updated` | Transfers status count from previous to new status |
+| `interview.created` | Increments total interview counter |
+
+## Getting Started
 
 ```bash
 npm install
+npm start                # production
+npm run dev              # development with nodemon
 ```
 
-### 3. Configure Environment Variables
+The service listens on port `5005` by default.
 
-Create a `.env` file in the service root:
-
-```env
-# Server Configuration
-PORT=5004
-
-# MongoDB Configuration
-MONGODB_URI=mongodb://localhost:27017/jobtracker_analytics
-
-# Consul Service Discovery
-SERVICE_HOST=localhost / your-ip-address
-CONSUL_HOST=localhost
-CONSUL_PORT=8500
-SERVICE_ID=analytics-service-1
-SERVICE_NAME=analytics-service
-
-# Downstream Services
-APPLICATION_SERVICE=application-service
-INTERVIEW_SERVICE=interview-service
-USER_SERVICE=user-service
-
-# RabbitMQ Configuration
-RABBITMQ_URL=amqp://localhost:5672
-EXCHANGE_NAME=jobtracker_exchange
-EXCHANGE_TYPE=topic
-QUEUE_ANALYTICS=analytics_queue
-
-# Event Routing Keys
-ROUTING_KEY_APP_CREATED=application.created
-ROUTING_KEY_APP_UPDATED=application.updated
-ROUTING_KEY_ITV_CREATED=interview.created
-ROUTING_KEY_ITV_UPDATED=interview.updated
-ROUTING_KEY_ANALYTICS_SUMMARY=analytics.summary
-
-# Performance Configuration
-PREFETCH_COUNT=10
-```
-
-### 4. Run the Service
-
-```bash
-# Development mode with auto-restart
-npm run dev
-
-# Production mode
-npm start
-```
-
-### 5. Access the Service
-
-- **Analytics API:** http://localhost:5004/api/analytics/
-
----
-
-## 🔧 Environment Variables Reference
+## Environment Variables
 
 | Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Service port | 5004 |
-| `MONGODB_URI` | MongoDB connection string | mongodb://localhost:27017/jobtracker_analytics |
-| `SERVICE_HOST` | Host for Consul registration | localhost |
-| `CONSUL_HOST` | Consul server host | localhost |
-| `CONSUL_PORT` | Consul server port | 8500 |
-| `SERVICE_ID` | Unique service instance ID | analytics-service-1 |
-| `SERVICE_NAME` | Service name for discovery | analytics-service |
-| `RABBITMQ_URL` | RabbitMQ connection URL | amqp://localhost:5672 |
-| `EXCHANGE_NAME` | RabbitMQ exchange name | jobtracker_exchange |
-| `QUEUE_ANALYTICS` | Analytics queue name | analytics_queue |
-| `PREFETCH_COUNT` | RabbitMQ prefetch count | 10 |
+|---|---|---|
+| `PORT` | HTTP port | `5005` |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/jobtracker_analytics` |
+| `CONSUL_HOST` | Consul agent host | `localhost` |
+| `CONSUL_PORT` | Consul agent port | `8500` |
+| `RABBITMQ_URL` | RabbitMQ connection URL | `amqp://guest:guest@localhost:5672` |
+| `EXCHANGE_NAME` | Topic exchange to consume from | `jobtracker.exchange` |
+| `QUEUE_ANALYTICS` | Queue bound to the exchange | `analytics_queue` |
+| `APPLICATION_SERVICE` | Application service hostname | `application-service` |
+| `INTERVIEW_SERVICE` | Interview service hostname | `interview-service` |
 
----
+## Project Structure
 
-> [🔗 Back to main Job Tracker README](../../README.md)
+```
+src/
+├── index.js                   # Express app, MongoDB connection, consumer startup
+├── Config/
+│   ├── consumer.js            # RabbitMQ consumer (topic exchange listener)
+│   ├── registerService.js     # Consul service registration
+│   └── getServices.js         # Inter-service HTTP clients (application, interview)
+├── Controllers/
+│   ├── analyticsController.js # Summary endpoint + updateAnalytics logic
+│   └── healthController.js    # Health check handler
+├── Models/
+│   └── AnalyticsModel.js      # Mongoose schema for aggregate counters
+├── Middlewares/
+│   └── authMiddleware.js      # RS256 JWT verification middleware
+└── Routes/
+    ├── analyticsRouter.js     # Express router for analytics endpoints
+    └── healthRouter.js        # Express router for health endpoint
+```

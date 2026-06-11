@@ -1,92 +1,90 @@
-#  Search Service
+# Search Service
 
-**Search Service** is a Spring Boot microservice responsible for **managing user searches** in the JobTracker application. It provides:
+Full-text search microservice for the JobTracker platform. Powered by Meilisearch for fast, typo-tolerant search across applications, users, contacts, and interviews. Consumes RabbitMQ events to keep search indexes synchronized in real time.
 
--  Search functionality for user contacts
--  Search functionality for user interviews
--  Search functionality for job applications
--  Integration with other microservices for user data
+## Tech Stack
 
----
+- **Runtime:** Node.js (Express 4)
+- **Search Engine:** Meilisearch
+- **Messaging:** RabbitMQ (amqplib) — multi-queue consumer
+- **Service Discovery:** HashiCorp Consul
+- **Auth:** JWT RS256 verification middleware
 
-## 🛠️ Technology Stack
+## API Endpoints
 
-- **Framework:** node.js + Express.js
-- **Service Discovery:** Consul
-- **Message Queue:** RabbitMQ
-- **Search Engine:** MeiliSearch for fast, typo-tolerant search
----
+All routes are prefixed via Kong at `/api/search-service`.
 
-## 🚀 Getting Started
+| Method | Path                       | Description                               |
+|--------|----------------------------|-------------------------------------------|
+| GET    | `/search/:type`             | Search documents by type (applications, users, contacts, interviews) |
+| GET    | `/search/:type/:id`         | Get a specific document from the index     |
+| GET    | `/search/reindex-all`       | Trigger a full reindex of all data         |
+| DELETE | `/search/:type/:id`         | Delete a document from the index           |
+| GET    | `/health`                   | Health check for Consul                    |
 
-### Prerequisites
-- Node.js 14 or higher
-- npm 
-- MeiliSearch
-- RabbitMQ
-- Consul (for service discovery)
+## Event-Driven Indexing
 
-### Clone the Repository
+The service listens on four RabbitMQ queues to keep Meilisearch indexes up to date:
+
+| Queue               | Source Service      | Content Indexed      |
+|---------------------|---------------------|----------------------|
+| `application.index` | application-service | Job applications     |
+| `user_events`       | user-service        | User profiles        |
+| `contact_queue`     | contact-service     | Contacts             |
+| `interview_queue`   | interview-service   | Interviews           |
+
+Each consumer receives `{ action: "create" | "delete", data: {...} }` payloads and applies the corresponding Meilisearch document operation.
+
+## Getting Started
 
 ```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Backend/search_service
+npm install
+
+# Start dependencies (Meilisearch + RabbitMQ)
+docker-compose up -d
+
+npm start
 ```
 
-## ⚙️ Environment Variables (`search-service`)
+The service listens on port `5009` by default.
 
-Below are the environment variables required to configure and run the `search-service`.  
-Create a `.env` file in the `Backend/search-service/` directory and add these keys with your values.
+### Prerequisites
 
-### Example `.env` file
+- Node.js 18+
+- Meilisearch
+- RabbitMQ
+- Consul agent
 
-```env
-# --- MeiliSearch configuration ---
-MEILI_HOST=
-MEILI_KEY=
+## Environment Variables
 
-# --- RabbitMQ configuration ---
-RABBITMQ_URL=
-RABBITMQ_EXCHANGE=
-RABBITMQ_EXCHANGE_TYPE=
-USER_QUEUE=
-CONTACT_QUEUE=
-APP_QUEUE=
-INTERVIEW_QUEUE=
+| Variable | Description | Default |
+|---|---|---|
+| `PORT` | HTTP port | `5009` |
+| `MEILI_HOST` | Meilisearch server URL | `http://localhost:7700` |
+| `MEILI_KEY` | Meilisearch API key | |
+| `RABBITMQ_URL` | RabbitMQ connection URL | `amqp://guest:guest@localhost:5672` |
+| `RABBITMQ_EXCHANGE` | RabbitMQ exchange name | `jobtracker.exchange` |
+| `APP_QUEUE` | Queue for application events | `application.index` |
+| `USER_QUEUE` | Queue for user events | `user_events` |
+| `CONTACT_QUEUE` | Queue for contact events | `contact_queue` |
+| `INTERVIEW_QUEUE` | Queue for interview events | `interview_queue` |
+| `CONSUL_HOST` | Consul agent host | `localhost` |
+| `CONSUL_PORT` | Consul agent port | `8500` |
 
-# --- Service Configuration ---
-PORT=
+## Project Structure
 
-# --- Consul configuration ---
-SERVICE_HOST=
-CONSUL_HOST=
-CONSUL_PORT=
-SERVICE_ID=
-SERVICE_NAME=
 ```
-
----
-
-### Variable Reference
-
-| Name                   | Description                                                                                   |
-|------------------------|-----------------------------------------------------------------------------------------------|
-| `MEILI_HOST`           | MeiliSearch server endpoint URL                                                               |
-| `MEILI_KEY`            | MeiliSearch master or private key for API access                                              |
-| `RABBITMQ_URL`         | RabbitMQ server connection string (AMQP protocol)                                             |
-| `RABBITMQ_EXCHANGE`    | Name of the RabbitMQ exchange for messaging/event distribution                                |
-| `RABBITMQ_EXCHANGE_TYPE` | Type of exchange in RabbitMQ (usually `topic` or `fanout`)                                 |
-| `USER_QUEUE`           | Queue name for user indexing events                                                           |
-| `CONTACT_QUEUE`        | Queue name for contact indexing events                                                        |
-| `APP_QUEUE`            | Queue name for application indexing events                                                    |
-| `INTERVIEW_QUEUE`      | Queue name for interview indexing events                                                      |
-| `PORT`                 | Port the search-service listens on                                                            |
-| `SERVICE_HOST`         | Host/IP this service registers in Consul (should be reachable on the network)                 |
-| `CONSUL_HOST`          | Consul agent/server hostname or IP address                                                    |
-| `CONSUL_PORT`          | Consul HTTP API port (default is 8500)                                                        |
-| `SERVICE_ID`           | Unique identifier for this search-service instance in Consul                                  |
-| `SERVICE_NAME`         | Name the service registers under in Consul (used for service discovery)                       |
-
----
-
-> [🔗 Back to main Job Tracker README](../../README.md)  
+src/
+├── index.js                   # Express app, route mounting, consumer startup
+├── Config/
+│   ├── consumer.js            # RabbitMQ multi-queue consumer
+│   └── registerService.js     # Consul service registration
+├── Controllers/
+│   ├── searchController.js    # Search, reindex, and delete handlers
+│   └── healthController.js    # Health check handler
+├── Middlewares/
+│   └── authMiddleware.js      # RS256 JWT verification middleware
+└── routers/
+    ├── searchRoutes.js        # Express router for search endpoints
+    └── healthRouter.js        # Express router for health endpoint
+```

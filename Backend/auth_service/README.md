@@ -1,236 +1,77 @@
-# 🛡️ Auth Service
+# Auth Service
 
-**Auth Service** is a Spring Boot microservice responsible for **user authentication and authorization** in the JobTracker application. It provides:
+User authentication and authorization microservice for the JobTracker platform. Provides secure registration, login, and JWT-based identity management with PostgreSQL persistence.
 
-- ✅ User registration & login  
-- 🔐 Secure password management with BCrypt
-- 🔄 JWT token generation and validation
-- 🔗 Service integration with other microservices
-- 📊 Consul service registration and health checks
+## Tech Stack
 
-Built with Spring Boot, Spring Security, and PostgreSQL for robust authentication management.
-
----
-
-## 🛠️ Technology Stack
-
-- **Framework:** Spring Boot 3.4.4
-- **Security:** Spring Security + JWT
-- **Database:** PostgreSQL 
-- **ORM:** Spring Data JPA
-- **Service Discovery:** Consul
+- **Runtime:** Java 17 (Spring Boot 3.4.4)
+- **Database:** PostgreSQL (Spring Data JPA / Hibernate)
+- **Security:** Spring Security + OAuth2 Resource Server (RS256 JWT)
+- **Service Discovery:** HashiCorp Consul
 - **Build Tool:** Maven
-- **Java Version:** JDK 17
 
----
+## API Endpoints
 
-## 🚀 Getting Started
+All routes are prefixed via Kong at `/api/auth-service`.
 
-### Prerequisites
-- Java 17 or higher
-- Maven 3.6+
-- PostgreSQL database
-- Consul (for service discovery)
+| Method | Endpoint              | Description                      |
+|--------|-----------------------|----------------------------------|
+| POST   | `/auth/register`      | Register a new user              |
+| POST   | `/auth/login`         | Authenticate user, return JWT    |
+| DELETE | `/auth/{email}`       | Delete user account by email     |
+| GET    | `/health`             | Health check for Consul          |
 
-### 1. Clone the Repository
-
-```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Backend/auth_service
-```
-
-### 2. Configure Database
-
-Create a PostgreSQL database for the auth service.
-
-
-### 3. Configure Environment Variables
-
-Create `application-local.properties` or set environment variables:
-
-```properties
-# Database Configuration
-spring.datasource.url=jdbc:postgresql://localhost:5432/auth_db
-spring.datasource.username=auth_user
-spring.datasource.password=password
-
-# JWT Configuration
-jwt.secret=your-secret-key
-jwt.expiration=86400000
-
-# Consul Configuration
-spring.cloud.consul.host=localhost / your-ip-address
-spring.cloud.consul.port=8500
-spring.application.name=auth-service
-```
-
-### 4. Run the Service
+## Getting Started
 
 ```bash
-# Using Maven
+# Build and run with Maven
 ./mvnw spring-boot:run
 ```
 
-### 5. Access the Service
+The service listens on port `5000` by default.
 
-- **Auth API Endpoint:** http://localhost:8080/api/auth/
+### Prerequisites
 
----
+- Java 17+
+- PostgreSQL database
+- Consul agent
 
-## 📋 API Endpoints
+### Database Setup
 
-### Authentication Endpoints
+Create a PostgreSQL database and configure the connection via environment variables or `application-local.properties`.
 
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/register` | Register a new user |
-| POST | `/api/auth/login` | User login |
+## Configuration
 
+### Environment Variables
 
-## ⚙️ Environment/Configuration Variables (`auth-service`)
+| Variable | Description |
+|---|---|
+| `SERVER_PORT` | HTTP port |
+| `SPRING_DATASOURCE_URL` | PostgreSQL JDBC URL |
+| `SPRING_DATASOURCE_USERNAME` | Database user |
+| `SPRING_DATASOURCE_PASSWORD` | Database password |
+| `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLIC_KEY_LOCATION` | Path to RS256 public key |
+| `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_EXPIRATION` | JWT expiry in ms |
+| `CLOUD_CONSUL_HOST` | Consul agent host |
+| `CLOUD_CONSUL_PORT` | Consul agent port |
 
-Set these in your `application.yaml`, `application.properties`, or as environment variables.  
-You can use the ENV-formatted version for `.env.example` or container deployment.
+## JWT Authentication
 
----
+JWT tokens are signed with RS256 using a private key held by the auth service. Downstream services and the Kong gateway verify tokens using the corresponding public key (`keys/public.pem`).
 
-### YAML/Properties Structure
+- Registration hashes passwords with BCrypt before persisting
+- Login validates credentials and returns a signed JWT access token
+- The DELETE endpoint allows account removal coordinated with the user service saga
 
-```yaml
-server:
-  port:
+## Project Structure
 
-spring:
-  security:
-    oauth2:
-      resourceserver:
-        jwt:
-          public-key-location:
-          expiration:
-
-  application:
-    name:
-
-  services:
-    profile-service:
-      name:
-
-  datasource:
-    url:
-    username:
-    password:
-    driver-class-name:
-
-  jpa:
-    hibernate:
-      ddl-auto:
-    properties:
-      hibernate:
-        dialect:
-
-  cloud:
-    consul:
-      host:
-      port:
-      discovery:
-        hostname:
-        port:
-        register:
-        health-check-path:
-        health-check-interval:
-        service-name:
-        instance-id:
 ```
-
----
-
-### ENV File Template (`.env.example` / Docker Compose)
-
-```env
-SERVER_PORT=
-
-SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLIC_KEY_LOCATION=
-SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_EXPIRATION=
-
-SPRING_APPLICATION_NAME=
-
-SPRING_SERVICES_PROFILE_SERVICE_NAME=
-
-SPRING_DATASOURCE_URL=
-SPRING_DATASOURCE_USERNAME=
-SPRING_DATASOURCE_PASSWORD=
-SPRING_DATASOURCE_DRIVER_CLASS_NAME=
-
-SPRING_JPA_HIBERNATE_DDL_AUTO=
-SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=
-
-CLOUD_CONSUL_HOST=
-CLOUD_CONSUL_PORT=
-CLOUD_CONSUL_DISCOVERY_HOSTNAME=
-CLOUD_CONSUL_DISCOVERY_PORT=
-CLOUD_CONSUL_DISCOVERY_REGISTER=
-CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_PATH=
-CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_INTERVAL=
-CLOUD_CONSUL_DISCOVERY_SERVICE_NAME=
-CLOUD_CONSUL_DISCOVERY_INSTANCE_ID=
+src/main/java/com/jobtracker/auth_service/
+├── controllers/
+│   ├── AuthController.java
+│   └── HealthController.java
+├── models/
+├── repositories/
+├── services/
+└── security/
 ```
-
----
-
-### Variable Reference
-
-| Variable (YAML/ENV)                                      | Description                                                        |
-|----------------------------------------------------------|--------------------------------------------------------------------|
-| `server.port` / `SERVER_PORT`                            | HTTP port for the service                                          |
-| `spring.security.oauth2.resourceserver.jwt.public-key-location` / `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_PUBLIC_KEY_LOCATION` | Location of public key for JWT validation                          |
-| `spring.security.oauth2.resourceserver.jwt.expiration` / `SPRING_SECURITY_OAUTH2_RESOURCESERVER_JWT_EXPIRATION` | JWT expiration time in ms (e.g. 7 days = `604800000`)              |
-| `spring.application.name` / `SPRING_APPLICATION_NAME`     | Name of the application                                            |
-| `spring.services.profile-service.name` / `SPRING_SERVICES_PROFILE_SERVICE_NAME` | Name of related profile/user service                               |
-| `spring.datasource.url` / `SPRING_DATASOURCE_URL`         | Database URL (PostgreSQL)                                          |
-| `spring.datasource.username` / `SPRING_DATASOURCE_USERNAME` | Database username                                                 |
-| `spring.datasource.password` / `SPRING_DATASOURCE_PASSWORD` | Database password                                                 |
-| `spring.datasource.driver-class-name` / `SPRING_DATASOURCE_DRIVER_CLASS_NAME` | JDBC driver class                                                 |
-| `spring.jpa.hibernate.ddl-auto` / `SPRING_JPA_HIBERNATE_DDL_AUTO` | Hibernate DDL (e.g. `update`, `validate`)                          |
-| `spring.jpa.properties.hibernate.dialect` / `SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT` | JPA dialect for PostgreSQL                                        |
-| `cloud.consul.host` / `CLOUD_CONSUL_HOST`                 | Consul host for service discovery                                  |
-| `cloud.consul.port` / `CLOUD_CONSUL_PORT`                 | Consul port                                                        |
-| `cloud.consul.discovery.hostname` / `CLOUD_CONSUL_DISCOVERY_HOSTNAME` | Hostname/IP to advertise to Consul                                 |
-| `cloud.consul.discovery.port` / `CLOUD_CONSUL_DISCOVERY_PORT`        | Port to register in Consul                                         |
-| `cloud.consul.discovery.register` / `CLOUD_CONSUL_DISCOVERY_REGISTER`| Whether to register service (`true`/`false`)                       |
-| `cloud.consul.discovery.health-check-path` / `CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_PATH`    | Consul health check endpoint (e.g. `/health`)                      |
-| `cloud.consul.discovery.health-check-interval` / `CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_INTERVAL`| Consul health check interval (e.g. `10s`)                          |
-| `cloud.consul.discovery.service-name` / `CLOUD_CONSUL_DISCOVERY_SERVICE_NAME`| Name in Consul                                                    |
-| `cloud.consul.discovery.instance-id` / `CLOUD_CONSUL_DISCOVERY_INSTANCE_ID`| Unique Consul instance ID                                          |
-
----
-
-> [🔗 Back to main Job Tracker README](../../README.md)  
-
----
-
-## 📬 API Endpoints
-
-Sample base URL: `http://localhost:8080/api/auth/`
-
-- `POST /register` – Register a new user  
-- `POST /login` – Authenticate user and return token  
-
----
-
-## 🗝️ JWT Configuration
-
-In the src/main/resources directory, you will find two important files for JWT configuration:
-
-`private.pom`
-    - Contains the private key used for signing JWT tokens.
-
-    - Purpose: Used to create secure tokens that can be sent to clients during the authentication process.
-
-`public.pom`  
-    - Contains the corresponding public key used for verifying the JWT tokens.
-
-    - Purpose: This key is used by the service to ensure that the tokens received from clients are valid and haven't been tampered with.
-
-These files should be kept secure and should not be shared publicly, as they are crucial to maintaining the integrity of the authentication process.
-
----

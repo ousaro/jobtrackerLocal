@@ -1,150 +1,100 @@
-# 📋 Application Service
+# Application Service
 
-**Application Service** is a Django-based microservice that manages job applications in the JobTracker system. It provides comprehensive job application tracking and management capabilities:
+Job application management microservice for the JobTracker platform. Provides full CRUD operations over job applications with status lifecycle tracking and event-driven search index synchronization.
 
--  Job application CRUD operations
--  Application status tracking and updates
--  Company and position management
--  Application timeline and history
--  Advanced filtering and search
--  Application statistics and analytics
+## Tech Stack
 
-Built with Django, Django REST Framework, and MongoDB for flexible document storage.
+- **Runtime:** Node.js (Express 5)
+- **Database:** MongoDB (Mongoose ODM)
+- **Service Discovery:** HashiCorp Consul
+- **Messaging:** RabbitMQ (amqplib) — topic exchange + work queue
+- **Auth:** JWT RS256 verification middleware
 
----
+## API Endpoints
 
-## 🛠️ Technology Stack
+All routes are prefixed via Kong at `/api/application-service`.
 
-- **Framework:** Django + Django REST Framework
-- **Database:** MongoDB (MongoEngine ODM)
-- **Authentication:** JWT token validation
-- **Service Discovery:** Consul integration
-- **Message Queue:** RabbitMQ (Pika)
-- **API Documentation:** Django REST Framework browsable API
+| Method | Path                 | Description                     |
+|--------|----------------------|----------------------------------|
+| GET    | `/applications`      | List all applications           |
+| POST   | `/applications`      | Create a new application        |
+| GET    | `/applications/:id`  | Retrieve a single application   |
+| PUT    | `/applications/:id`  | Update an application           |
+| DELETE | `/applications/:id`  | Delete an application           |
+| POST   | `/applications/ids`  | Bulk retrieve by array of IDs   |
+| GET    | `/health`            | Health check for Consul         |
 
----
+## Data Model — `JobApplication`
 
-## 🚀 Getting Started
+| Field                | Type   | Constraints                           |
+|----------------------|--------|---------------------------------------|
+| `owner_id`           | ObjectId | required                            |
+| `company_name`       | String | required                             |
+| `position_title`     | String | required                             |
+| `application_date`   | Date   | required                             |
+| `location`           | String | required                             |
+| `salary_expectation` | Number | required                             |
+| `status`             | String | enum: `SAVED`, `APPLIED`, `INTERVIEW_SCHEDULED`, `OFFER_RECEIVED`, `REJECTED`, `HIRED` |
+| `job_description_link` | String | required                           |
+| `created_at`         | Date   | auto (Mongoose timestamps)           |
+| `last_modified`      | Date   | auto (Mongoose timestamps)           |
 
-### Prerequisites
-- Python 3.8+
-- MongoDB
-- Consul (for service discovery)
-- RabbitMQ (for messaging)
+## Event-Driven Architecture
 
-### 1. Clone the Repository
+On every write operation the service publishes messages to synchronize the Meilisearch search index:
 
-```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Backend/application_service
-```
+| Operation | Exchange / Routing Key              | Queue               |
+|-----------|-------------------------------------|---------------------|
+| Create    | `jobtracker.exchange` / `application.created` | `application.index` |
+| Update    | `jobtracker.exchange` / `application.updated` | `application.index` |
+| Delete    | —                                   | `application.index` |
 
-### 2. Set Up Virtual Environment
-
-```bash
-# Create virtual environment
-python -m venv venv
-
-# Activate virtual environment
-# Windows
-venv\Scripts\activate
-# Linux/Mac
-source venv/bin/activate
-```
-
-### 3. Install Dependencies
+## Getting Started
 
 ```bash
-pip install -r requirements.txt
+# 1. Install dependencies
+npm install
+
+# 2. Copy environment configuration
+cp .env.container .env
+
+# 3. Start the service
+npm start                # production
+npm run dev              # development with nodemon
 ```
 
-### 4. Configure Environment Variables
+The service listens on port `5002` by default.
 
-Create a `.env` file in the service root:
-
-```env
-# Server Configuration
-PORT=5002
-DEBUG=True
-SECRET_KEY=your-django-secret-key
-
-# MongoDB Configuration
-MONGO_DB=jobtracker_applications
-MONGO_HOST=localhost
-MONGO_PORT=27017
-
-# Consul Configuration
-SERVICE_HOST=localhost
-CONSUL_HOST=localhost
-CONSUL_PORT=8500
-SERVICE_ID=application-service-1
-SERVICE_NAME=application-service
-
-# RabbitMQ Configuration
-RABBITMQ_URL=amqp://localhost:5672
-RABBITMQ_EXCHANGE=jobtracker_exchange
-RABBITMQ_EXCHANGE_TYPE=topic
-RABBITMQ_ROUTING_KEY_APPLICATION_CREATED=application.created
-RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED=application.updated
-APP_QUEUE=application_events
-
-```
-### 5. Run Database Migrations
-
-```bash
-python manage.py migrate
-```
-
-### 6. Run the Service
-
-```bash
-# Development mode
-python manage.py runserver 0.0.0.0:5002
-
-# Or using the local runner
-python runLocal.py
-```
-
-### 7. Access the Service
-
-- **Application API:** http://localhost:5002/api/applications/
-
----
-
-## 📋 API Endpoints
-
-### Application Management
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/applications/` | List all applications (with filtering) |
-| POST | `/api/applications/` | Create new application |
-| GET | `/api/applications/{id}/` | Get application details |
-| PUT | `/api/applications/{id}/` | Update application |
-| PATCH | `/api/applications/{id}/` | Partial update application |
-| DELETE | `/api/applications/{id}/` | Delete application |
-
----
-
-## 🔧 Environment Variables Reference
+## Environment Variables
 
 | Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Django server port | 5002 |
-| `DEBUG` | Django debug mode | False |
-| `SECRET_KEY` | Django secret key | - |
-| `MONGO_DB` | MongoDB database name | jobtracker_applications |
-| `MONGO_HOST` | MongoDB host | localhost |
-| `MONGO_PORT` | MongoDB port | 27017 |
-| `SERVICE_HOST` | Host for Consul registration | localhost |
-| `CONSUL_HOST` | Consul server host | localhost |
-| `CONSUL_PORT` | Consul server port | 8500 |
-| `SERVICE_ID` | Unique service instance ID | application-service-1 |
-| `SERVICE_NAME` | Service name for discovery | application-service |
-| `RABBITMQ_URL` | RabbitMQ connection URL | amqp://localhost:5672 |
-| `RABBITMQ_EXCHANGE` | RabbitMQ exchange name | jobtracker_exchange |
-| `APP_QUEUE` | RabbitMQ queue for events | application_events |
+|---|---|---|
+| `PORT` | HTTP port | `5002` |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/Aplications_Service` |
+| `CONSUL_HOST` | Consul agent host | `localhost` |
+| `CONSUL_PORT` | Consul agent port | `8500` |
+| `RABBITMQ_URL` | RabbitMQ connection URL | `amqp://guest:guest@localhost:5672` |
+| `RABBITMQ_EXCHANGE` | Topic exchange name | `jobtracker.exchange` |
+| `RABBITMQ_ROUTING_KEY_APPLICATION_CREATED` | Routing key for create events | `application.created` |
+| `RABBITMQ_ROUTING_KEY_APPLICATION_UPDATED` | Routing key for update events | `application.updated` |
+| `APP_QUEUE` | Queue for search index sync | `application.index` |
 
----
+## Project Structure
 
-> [🔗 Back to main Job Tracker README](../../README.md)
+```
+src/
+├── index.js                  # Express app entry, MongoDB connection, Consul registration
+├── Config/
+│   ├── publisher.js          # RabbitMQ channel manager (topic exchange + queue)
+│   └── registerService.js    # Consul service registration with health check
+├── Controllers/
+│   ├── applicationController.js  # Request handlers for all CRUD endpoints
+│   └── healthController.js       # Health check handler
+├── Middlewares/
+│   └── authMiddleware.js     # RS256 JWT verification middleware
+├── Models/
+│   └── JobApplication.js     # Mongoose schema and model
+└── Routes/
+    ├── applicationRoutes.js  # Express router for application endpoints
+    └── healthRouter.js       # Express router for health endpoint
+```

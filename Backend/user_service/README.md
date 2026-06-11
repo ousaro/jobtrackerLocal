@@ -1,123 +1,98 @@
-# 👤 User Service
+# User Service
 
-**User Service** is a Node.js microservice that manages user profiles, skills, experience, and social connections in the JobTracker application. It provides:
+User profile management microservice for the JobTracker platform. Provides full CRUD over user profiles with event-driven search index synchronization and cross-service saga coordination.
 
-- 👤 User profile management
-- 🎯 Skills and expertise tracking  
-- 💼 Work experience and education
-- 🔗 Social media and contact links
-- 🔍 Profile search and discovery
-- 📊 Profile analytics and statistics
+## Tech Stack
 
-Built with Node.js, Express, and MongoDB for flexible profile data management.
-
----
-
-## 🛠️ Technology Stack
-
-- **Framework:** Node.js + Express.js
+- **Runtime:** Node.js (Express 5)
 - **Database:** MongoDB (Mongoose ODM)
-- **Authentication:** JWT validation
-- **Service Discovery:** Consul
-- **Message Queue:** RabbitMQ
-- **Validation:** Joi/Express-validator
+- **Service Discovery:** HashiCorp Consul
+- **Messaging:** RabbitMQ (amqplib)
+- **Auth:** JWT RS256 verification middleware
+- **Inter-service:** HTTP (axios)
 
----
+## API Endpoints
 
-## 🚀 Getting Started
+All routes are prefixed via Kong at `/api/user-service`.
 
-### Prerequisites
-- Node.js 18+ 
-- MongoDB
-- Consul (for service discovery)
-- RabbitMQ (for messaging)
+| Method | Path                   | Description                          |
+|--------|------------------------|--------------------------------------|
+| GET    | `/users/profile`        | List all profiles                   |
+| POST   | `/users/profile`        | Create a new profile                |
+| GET    | `/users/profile/:uid`   | Get profile by ID                   |
+| PUT    | `/users/profile/:uid`   | Update profile                      |
+| DELETE | `/users/profile/:uid`   | Delete profile                      |
+| GET    | `/users/profile/email/:email` | Get profile by email          |
+| POST   | `/users/profile/search` | Bulk retrieve profiles by array of IDs |
+| GET    | `/health`               | Health check for Consul             |
 
-### 1. Clone the Repository
+## Data Model — `User`
 
-```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Backend/user_service
-```
+| Field        | Type   | Constraints                      |
+|-------------|--------|----------------------------------|
+| `fullName`  | String | required                         |
+| `email`     | String | required, unique                 |
+| `phone`     | String | required, unique                 |
+| `location`  | String |                                  |
+| `skills`    | String |                                  |
+| `title`     | String |                                  |
+| `resume`    | String | file URL                         |
+| `avatar`    | String | image URL                        |
+| `bio`       | String |                                  |
+| `website`   | String |                                  |
+| `socialLinks.github` | String |                        |
+| `socialLinks.linkedin` | String |                       |
+| `createdAt` | Date   | auto (Mongoose timestamps)       |
+| `updatedAt` | Date   | auto (Mongoose timestamps)       |
 
-### 2. Install Dependencies
+## Saga Pattern
+
+The delete operation implements a compensation-based saga:
+
+1. Delete the user profile from MongoDB
+2. Call auth service to remove the corresponding auth record
+3. Publish a delete event to the search index queue
+4. If any step fails, the user document is restored (compensating transaction)
+
+## Getting Started
 
 ```bash
 npm install
+npm start                # production
+npm run dev              # development with nodemon
 ```
 
-### 3. Configure Environment Variables
+The service listens on port `5001` by default.
 
-Create a `.env` file in the service root:
-
-```env
-# Server Configuration
-PORT=5001
-
-# MongoDB Configuration
-MONGO_URI=mongodb://localhost:27017/jobtracker_users
-
-
-# RabbitMQ Configuration
-RABBITMQ_URL=amqp://localhost:5672
-USER_QUEUE=user_events
-USER_EXCHANGE=user_exchange
-
-# Consul Configuration
-SERVICE_HOST=localhost
-CONSUL_HOST=localhost
-CONSUL_PORT=8500
-SERVICE_ID=user-service-1
-SERVICE_NAME=user-service
-
-# Downstream Services
-AUTH_SERVICE=http://localhost:5000
-```
-
-### 4. Run the Service
-
-```bash
-# Development mode
-npm run dev
-
-# Production mode
-npm start
-```
-
-### 5. Access the Service
-
-- **User API:** http://localhost:5001/api/users/
-
----
-
-## 📋 API Endpoints
-
-### Profile Management
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/users/profile` | Get current user profile |
-| PUT | `/api/users/profile` | Update user profile |
-| GET | `/api/users/profile/:userId` | Get user profile by ID |
-| DELETE | `/api/users/profile` | Delete user profile |
-
----
-
-## 🔧 Environment Variables
+## Environment Variables
 
 | Variable | Description | Default |
-|----------|-------------|---------|
-| `PORT` | Service port | 5001 |
-| `MONGO_URI` | MongoDB connection string | mongodb://localhost:27017/jobtracker_users |
-| `RABBITMQ_URL` | RabbitMQ connection URL | amqp://localhost:5672 |
-| `USER_QUEUE` | RabbitMQ queue for user events | user_events |
-| `USER_EXCHANGE` | RabbitMQ exchange name | user_exchange |
-| `SERVICE_HOST` | Host for Consul registration | localhost |
-| `CONSUL_HOST` | Consul server host | localhost |
-| `CONSUL_PORT` | Consul server port | 8500 |
-| `SERVICE_ID` | Unique service instance ID | user-service-1 |
-| `SERVICE_NAME` | Service name for discovery | user-service |
-| `AUTH_SERVICE` | Auth service endpoint | http://localhost:8080 |
+|---|---|---|
+| `PORT` | HTTP port | `5001` |
+| `MONGO_URI` | MongoDB connection string | `mongodb://localhost:27017/jobtracker_users` |
+| `CONSUL_HOST` | Consul agent host | `localhost` |
+| `CONSUL_PORT` | Consul agent port | `8500` |
+| `RABBITMQ_URL` | RabbitMQ connection URL | `amqp://localhost:5672` |
+| `USER_QUEUE` | Queue for search index sync | `user_events` |
+| `AUTH_SERVICE` | Auth service base URL | `http://localhost:5000` |
 
----
+## Project Structure
 
-> [🔗 Back to main Job Tracker README](../../README.md)
+```
+src/
+├── index.js                   # Express app entry, MongoDB connection, Consul registration
+├── Config/
+│   ├── publisher.js           # RabbitMQ publisher (queue-based)
+│   ├── registerService.js     # Consul service registration
+│   └── getServices.js         # Inter-service HTTP clients
+├── Controllers/
+│   ├── userController.js      # Request handlers for profile CRUD + saga logic
+│   └── healthController.js    # Health check handler
+├── Middlewares/
+│   └── authMiddleware.js      # RS256 JWT verification middleware
+├── Models/
+│   └── user.js                # Mongoose schema and model
+└── Routes/
+    ├── userRoutes.js          # Express router for profile endpoints
+    └── healthRouter.js        # Express router for health endpoint
+```

@@ -1,262 +1,162 @@
-# 🗂️ Job Tracker Project
+# JobTracker — Polyglot Microservices Platform
 
-**Job Tracker** is a comprehensive full-stack microservices application that helps users manage job applications, interviews, profiles, and track their progress with real-time analytics. Built with modern technologies and designed for local development.
-
----
-
-## 🛠️ Key Features
-
-- **Job Applications Management:**  
-  Add, track, update, and search job applications; manage statuses (applied, interview, offer, rejected, etc.)
-- **Interview Management:**  
-  Schedule and track interviews by date/type, with filtering and details for each session
-- **User Profiles:**  
-  Comprehensive user profiles with resume, skills, experience, and social/contact links
-- **Search & Filter:**  
-  Advanced search capabilities for applications, users, and companies with real-time filtering
-- **Analytics:**  
-  Visualize job search statistics with interactive charts and progress tracking
-- **Contact Management:**  
-  Manage professional contacts and networking connections
+Full-stack job application management platform built as a **10-service polyglot microsystems** architecture. Features event-driven synchronization, CQRS-style search indexing, saga-based distributed transactions, and an API gateway mesh — all running on local infrastructure.
 
 ---
 
-## 🏗️ Tech Stack & Architecture
+## Highlights
+
+- **10 microservices** across 3 languages (Java/Spring Boot, Node.js/Express, TypeScript/Next.js)
+- **Polyglot persistence:** PostgreSQL + MongoDB + Meilisearch
+- **Event-driven architecture:** RabbitMQ topic exchange with 4 queue consumers
+- **CQRS search pattern:** Write services publish events; search service consumes and indexes in Meilisearch
+- **Saga pattern:** Compensating transactions across service boundaries (user delete cascades to auth)
+- **API gateway mesh:** Kong with JWT RS256 validation, CORS, and route abstraction
+- **Service discovery:** HashiCorp Consul with health-check-based registration
+
+---
+
+## Architecture
+
+```
+Frontend (Next.js 14)
+    |
+Kong API Gateway (JWT validation, routing, CORS)
+    |
+    +-- Auth Service (Java/Spring Boot + PostgreSQL)  :5000
+    +-- User Service (Node.js/Express + MongoDB)      :5001
+    +-- Application Service (Node.js/Express + MongoDB):5002
+    +-- Interview Service (Java/Spring Boot + MongoDB) :5003
+    +-- Contact Service (Java/Spring Boot + MongoDB)   :5004
+    +-- Analytics Service (Node.js/Express + MongoDB)  :5005
+    +-- Dashboard Service (Node.js/Express + MongoDB)  :5006
+    +-- File Upload Service (Node.js/Express)          :5007
+    +-- Notification Service (Node.js/Express + MongoDB):5008
+    +-- Search Service (Node.js/Express + Meilisearch) :5009
+
+Event Bus (RabbitMQ topic exchange)
+    |
+    +-- Search Service consumes: application.index, user_events, contact_queue, interview_queue
+    +-- Analytics Service consumes: application.created/updated, interview.created/updated
+
+Consul — service registration + health monitoring
+```
+
+---
+
+## Tech Stack
 
 ### Frontend
-- **Framework:** [Next.js 14](https://nextjs.org/) with TypeScript
-- **UI Components:** [Radix UI](https://www.radix-ui.com/) + [Tailwind CSS](https://tailwindcss.com/)
-- **Charts:** [Ant Design Charts](https://charts.ant.design/)
-- **State Management:** React Context API
-- **Authentication:** JWT-based authentication with refresh tokens
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 14 + TypeScript (App Router) |
+| UI | Radix UI + shadcn/ui + Tailwind CSS |
+| Charts | Ant Design Charts |
+| State | React Context API |
+| Auth | JWT with refresh tokens |
 
-### Backend Microservices
-- **Languages:** Java (Spring Boot), Python (Django), Node.js (Express)
-- **Databases:**  
-  - [PostgreSQL](https://www.postgresql.org/) (user authentication, interviews)
-  - [MongoDB](https://www.mongodb.com/) (applications, analytics, contacts)
-- **Message Queue:** [RabbitMQ](https://www.rabbitmq.com/) for async communication
-- **Search Engine:** [Meilisearch](https://www.meilisearch.com/) for fast, typo-tolerant search
-- **API Gateway:** [Kong](https://konghq.com/kong/) for request routing and API management
-- **Service Discovery:** [Consul](https://www.consul.io/) for service registration and health checks
+### Backend Infrastructure
+| Component | Technology |
+|---|---|
+| API Gateway | Kong 3.5 (DB-less, JWT plugin, CORS) |
+| Service Discovery | HashiCorp Consul |
+| Message Broker | RabbitMQ (topic exchange) |
+| Search Engine | Meilisearch |
 
----
+### Microservices
 
-## 🖼️ Application Screenshots
-
-### User Profiles & Authentication
-![Auth](./ScreenShots/auth.JPG)
-*User authentication and registration interface*
-
-![Profile Details](./ScreenShots/profileDetails.JPG)
-*Detailed user profile management*
-
-![Profiles](./ScreenShots/profiles.JPG)
-*User profiles overview and search*
-
-
-### Analytics
-![Analytics](./ScreenShots/anlytics.JPG)
-*Comprehensive analytics with charts showing job search progress and statistics*
-
-### Job Applications Management
-![Applications](./ScreenShots/applications.JPG)
-*Job applications list with filtering, sorting, and status management*
-
-### Interview Management
-![Interview](./ScreenShots/interview.JPG)
-*Interview scheduling and tracking interface*
-
-### Contact & Network Management
-![Contacts](./ScreenShots/contacts.JPG)
-*Professional contact management and networking tools*
-
-### Settings & Configuration
-![Settings](./ScreenShots/settings.JPG)
-*Application settings and user preferences*
-
-### Advanced Search
-![MeiliSearch](./ScreenShots/meilliSearch.JPG)
-*Fast, typo-tolerant search across applications and profiles*
-
-### Service Infrastructure
-![Consul](./ScreenShots/consul.JPG)
-*Consul service discovery and health monitoring dashboard*
+| Service | Language | Database | Pattern |
+|---|---|---|---|
+| Auth | Java 17 / Spring Boot | PostgreSQL | OAuth2 resource server, BCrypt |
+| User | Node.js / Express 5 | MongoDB | Saga (compensating delete), event publish |
+| Application | Node.js / Express 5 | MongoDB | CRUD + event publish |
+| Interview | Java 17 / Spring Boot | MongoDB | CRUD + event publish |
+| Contact | Java 17 / Spring Boot | MongoDB | CRUD + event publish |
+| Analytics | Node.js / Express 5 | MongoDB | Event consumer, aggregate counters |
+| Dashboard | Node.js / Express 5 | MongoDB | Event consumer, pre-computed views |
+| File Upload | Node.js / Express 5 | Filesystem | Multer disk storage |
+| Notification | Node.js / Express 5 | MongoDB | Event consumer |
+| Search | Node.js / Express 4 | Meilisearch | Multi-queue consumer, CQRS indexing |
 
 ---
 
-## 🕸️ Service Communication & Architecture
+## Screenshots
 
-- **API Gateway:** [Kong](https://konghq.com/kong/) provides centralized request routing, rate limiting, and API management
-- **Service Discovery:** [Consul](https://www.consul.io/) enables automatic service registration, health monitoring, and discovery
-- **Message Queue:** [RabbitMQ](https://www.rabbitmq.com/) handles asynchronous communication between services
-- **RESTful APIs:** Direct HTTP communication between services for real-time operations
-- **Search:** [Meilisearch](https://www.meilisearch.com/) provides ultra-fast search capabilities across all data
+<details>
+<summary>Click to expand (8 screenshots)</summary>
 
----
+| | |
+|---|---|
+| ![Auth](./ScreenShots/auth.JPG) | ![Profile Details](./ScreenShots/profileDetails.JPG) |
+| ![Profiles](./ScreenShots/profiles.JPG) | ![Analytics](./ScreenShots/anlytics.JPG) |
+| ![Applications](./ScreenShots/applications.JPG) | ![Interview](./ScreenShots/interview.JPG) |
+| ![Contacts](./ScreenShots/contacts.JPG) | ![Settings](./ScreenShots/settings.JPG) |
+| ![MeiliSearch](./ScreenShots/meilliSearch.JPG) | ![Consul](./ScreenShots/consul.JPG) |
 
-## 📦 Microservices Overview
-
-| Service | Technology | Port | Description |
-|---------|------------|------|-------------|
-| **Frontend** | Next.js 14 + TypeScript | 3000 | User interface and client-side application |
-| **Auth Service** | Java + Spring Boot | 5000 | User authentication, JWT token management |
-| **User Service** | Node.js + Express | 5001 | User profiles, skills, and social connections |
-| **Application Service** | Python + Django | 5002 | Job application CRUD and status management |
-| **Interview Service** | Java + Spring Boot | 5003 | Interview scheduling and tracking |
-| **Search Service** | Node.js + Meilisearch | 5009 | Search and filtering across all data |
-| **Analytics Service** | Node.js + Express | 5005 | Real-time metrics and dashboard data |
-| **Contact Service** | Java + Spring Boot | 5004 | Professional contact management |
-| **Dashboard Service** | Node.js + Express | 5006 | Dashboard data aggregation |
-| **Kong Gateway** | Kong | 8000 | API Gateway (proxy/admin) |
-| **Consul** | Consul | 8500 | Service discovery and health checks |
-
-> **📁 See the [Backend](./Backend/) directory for detailed service documentation and setup instructions.**
+</details>
 
 ---
 
-## 🚀 Quick Start Guide
+## Quick Start
 
-### Prerequisites
-- [Node.js](https://nodejs.org/) (v18 or higher)
-- [Python](https://www.python.org/) (v3.8 or higher)
-- [Java](https://www.oracle.com/java/) (JDK 17 or higher)
-- [Docker](https://docs.docker.com/get-docker/) and Docker Compose
-- [MongoDB](https://www.mongodb.com/try/download/community)
-- [PostgreSQL](https://www.postgresql.org/download/)
-
-### 1. Clone the Repository
 ```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal
-```
-
-### 2. Start Infrastructure Services
-Start Kong Gateway and Consul for service management:
-```bash
-# Start Kong and Consul using Docker Compose
+# 1. Infrastructure (Kong + Consul)
 docker-compose up -d
-```
 
-### 3. Start Individual Services
-
-#### Backend Services
-Each service can be started independently. Navigate to each service directory and follow the setup:
-
-```bash
-# Auth Service (Java Spring Boot)
-cd Backend/auth_service
-./mvnw spring-boot:run
-
-# User Service (Node.js)
-cd Backend/user_service
-npm install
-npm start
-
-# Application Service (Python Django)
+# 2. Pick a service — see Backend/<service>/README.md for details
+# Example: Application Service
 cd Backend/application_service
-pip install -r requirements.txt
-python runLocal.py
-
-# Analytics Service (Node.js)
-cd Backend/analytics_service
-npm install
-npm start
-
-# Search Service (Node.js + Meilisearch)
-cd Backend/search_service
-npm install
-docker-compose up -d # Start Meilisearch and rabbitmq
-npm start
-
-# Notification Service (Node.js)
-cd Backend/notification_service
-npm install
-npm start
-
-# Contact Service (Java Spring Boot)
-cd Backend/contact_service
-./mvnw spring-boot:run
-
-# Interview Service (Java Spring Boot)
-cd Backend/interview_service
-./mvnw spring-boot:run
-
+npm install && npm start
 ```
 
-#### Frontend Application
-```bash
-cd Frontend
-npm install
-npm run dev
-```
+Each microservice can be started independently. See individual service READMEs for environment setup and run commands.
 
-### 4. Access the Application
-- **Frontend Application:** http://localhost:3000
-- **Kong Gateway (API):** http://localhost:8000
-- **Consul UI:** http://localhost:8500
+### Access Points
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| Kong API | http://localhost:8000 |
+| Consul UI | http://localhost:8500 |
 
 ---
 
-## 🔧 Configuration & Environment
+## Architecture Patterns
 
-Each service requires specific environment variables. Check the individual service READMEs for detailed configuration:
+### Event-Driven Synchronization
+Write services (application, user, interview, contact) publish events to a RabbitMQ topic exchange on every create/update/delete. The search service and analytics service consume these events to keep indexes and aggregates current without synchronous coupling.
 
-### Common Environment Variables
-- **Database connections** (MongoDB, PostgreSQL)
-- **Service discovery** (Consul configuration)
-- **Message queue** (RabbitMQ settings)
-- **API keys and secrets**
-- **Service ports and endpoints**
+### Saga Pattern
+The user delete operation demonstrates a compensating saga:
+1. Delete user profile from MongoDB
+2. Call auth service to remove the authentication record
+3. Publish delete event to search index queue
+4. **On failure:** Restore the user document (compensating transaction)
 
-### Configuration Files
-- `.env` files for each service (see `.env.example` templates)
-- `docker-compose.yml` for infrastructure services
-- `Kong/kong.yml` for API gateway configuration
+### CQRS for Search
+Commands flow through CRUD services; queries for search go through Meilisearch via the search service. This decouples write-optimized MongoDB documents from read-optimized search indexes.
 
----
-
-## 📚 Documentation & Setup Guides
-
-### Backend Services Documentation
-- [Auth Service](./Backend/auth_service/README.md) - User authentication and JWT management
-- [User Service](./Backend/user_service/README.md) - User profiles and social connections
-- [Application Service](./Backend/application_service/README.md) - Job application management
-- [Interview Service](./Backend/interview_service/README.md) - Interview scheduling and tracking
-- [Search Service](./Backend/search_service/README.md) - Search and filtering functionality
-- [Analytics Service](./Backend/analytics_service/README.md) - Real-time metrics and analytics
-- [Contact Service](./Backend/contact_service/README.md) - Professional contact management
-
-### Frontend Documentation
-- [Frontend Application](./Frontend/README.md) - Next.js client application setup
+### API Gateway as Security Boundary
+Kong validates RS256 JWT tokens at the gateway level before requests reach any backend service. Only the auth service (registration/login) bypasses JWT validation.
 
 ---
 
-## 🛠️ Development Guidelines
+## Service Documentation
 
-### Project Structure
-- **Backend/**: All microservices organized by functionality
-- **Frontend/**: Next.js application with TypeScript
-- **Kong/**: API gateway configuration
-- **ScreenShots/**: Application UI screenshots for documentation
-
-### Service Communication
-Services communicate through:
-- RESTful HTTP APIs (synchronous)
-- RabbitMQ message queues (asynchronous)
-- Consul service discovery
-- Kong API gateway routing
-
-### Data Flow
-1. Frontend → Kong Gateway → Backend Services
-2. Services → RabbitMQ → Event handling
-3. Services → Consul → Service registration/discovery
-4. Services → Databases (MongoDB/PostgreSQL)
+| Service | README |
+|---|---|
+| Auth | [Backend/auth_service](./Backend/auth_service/README.md) |
+| User | [Backend/user_service](./Backend/user_service/README.md) |
+| Application | [Backend/application_service](./Backend/application_service/README.md) |
+| Interview | [Backend/interview_service](./Backend/interview_service/README.md) |
+| Contact | [Backend/contact_service](./Backend/contact_service/README.md) |
+| Analytics | [Backend/analytics_service](./Backend/analytics_service/README.md) |
+| Dashboard | [Backend/dashboard_service](./Backend/dashboard_service/README.md) |
+| File Upload | [Backend/fileUpload_service](./Backend/fileUpload_service/README.md) |
+| Search | [Backend/search_service](./Backend/search_service/README.md) |
+| Frontend | [Frontend](./Frontend/README.md) |
 
 ---
 
-## 📄 License
+## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
+MIT — see [LICENSE](LICENSE).

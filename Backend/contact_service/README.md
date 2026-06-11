@@ -1,154 +1,71 @@
-# 🧑‍🤝‍🧑 Contact Service
+# Contact Service
 
-**Contact Service** is a Spring Boot microservice responsible for **managing user contacts** in the JobTracker application. It provides:
+Professional contact management microservice for the JobTracker platform. Provides full CRUD over contact records with event-driven search index synchronization.
 
--  Contact creation, retrieval, updating, and deletion
--  Search functionality for user contacts
--  Integration with other microservices for user data
+## Tech Stack
 
-Built with Spring Boot, and MongoDB for robust contact management.
-
----
-
-## 🛠️ Technology Stack
-
-- **Framework:** Spring Boot 3.4.4
-- **Database:** MongoDB
-- **ORM:** Spring Data MongoDB
-- **Service Discovery:** Consul
+- **Runtime:** Java 17 (Spring Boot 3.4.5)
+- **Database:** MongoDB (Spring Data MongoDB)
+- **Service Discovery:** HashiCorp Consul
+- **Messaging:** RabbitMQ (Spring AMQP)
 - **Build Tool:** Maven
-- **Java Version:** JDK 17
 
----
+## API Endpoints
 
-## 🚀 Getting Started
+All routes are prefixed via Kong at `/api/contact-service`.
 
-### Prerequisites
-- Java 17 or higher
-- Maven 3.6+
-- MongoDB database
-- Consul (for service discovery)
+| Method | Path             | Description                         |
+|--------|------------------|-------------------------------------|
+| GET    | `/contacts/`      | List all contacts                   |
+| POST   | `/contacts/`      | Create a new contact                |
+| GET    | `/contacts/{id}`  | Get contact by ID                   |
+| PUT    | `/contacts/{id}`  | Update a contact                    |
+| DELETE | `/contacts/{id}`  | Delete a contact                    |
+| POST   | `/contacts/ids`   | Bulk retrieve contacts by IDs       |
+| GET    | `/health`         | Health check for Consul             |
 
-### Clone the Repository
+## Getting Started
 
 ```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Backend/contact_service
+# Build and run with Maven
+./mvnw spring-boot:run
 ```
 
-### Configure Database
+The service listens on port `5004` by default.
 
-Create a MongoDB database for the contact service.
+### Prerequisites
 
+- Java 17+
+- MongoDB
+- Consul agent
+- RabbitMQ
 
-## ⚙️ Environment/Configuration Variables (`contact-service`)
+## Configuration
 
-Add these keys and values to your `application.yaml`, `application.properties`, or set them as environment variables.
-You can use this as a template for your `.env.example`.
+### Key Properties
 
----
+| Key | Description |
+|---|---|
+| `server.port` | HTTP port |
+| `spring.data.mongodb.uri` | MongoDB connection URI |
+| `spring.rabbitmq.host` | RabbitMQ host |
+| `spring.rabbitmq.port` | RabbitMQ port |
+| `jobtracker.rabbitmq.exchange` | Topic exchange name |
+| `jobtracker.rabbitmq.routingkey.contact.created` | Routing key for create events |
+| `jobtracker.rabbitmq.routingkey.contact.updated` | Routing key for update events |
+| `cloud.consul.host` | Consul agent host |
+| `cloud.consul.port` | Consul agent port |
+| `cloud.consul.discovery.hostname` | Advertised hostname for Consul |
 
-### Example (`application.yaml` style)
+## Project Structure
 
-```yaml
-server:
-  port:
-
-spring:
-  application:
-    name:
-  data:
-    mongodb:
-      uri:
-      username:
-      password:
-  rabbitmq:
-    host:
-    port:
-    username:
-    password:
-    contact-queue:
-
-jobtracker:
-  rabbitmq:
-    exchange:
-    routingkey:
-      interview:
-        created:  # Should correspond to contact.created
-        updated:  # Should correspond to contact.updated
-
-cloud:
-  consul:
-    host:
-    port:
-    discovery:
-      hostname: 
-      port: 
-      register: 
-      health-check-path:
-      health-check-interval:
-      service-name:
-      instance-id:
 ```
-
----
-
-### Example (Spring ENV style - `.env` or Docker)
-
-```env
-SERVER_PORT=
-SPRING_APPLICATION_NAME=
-SPRING_DATA_MONGODB_URI=
-SPRING_DATA_MONGODB_USERNAME=
-SPRING_DATA_MONGODB_PASSWORD=
-SPRING_RABBITMQ_HOST=
-SPRING_RABBITMQ_PORT=
-SPRING_RABBITMQ_USERNAME=
-SPRING_RABBITMQ_PASSWORD=
-SPRING_RABBITMQ_CONTACT_QUEUE=
-JOBTRACKER_RABBITMQ_EXCHANGE=
-JOBTRACKER_RABBITMQ_ROUTINGKEY_INTERVIEW_CREATED=
-JOBTRACKER_RABBITMQ_ROUTINGKEY_INTERVIEW_UPDATED=
-CLOUD_CONSUL_HOST=
-CLOUD_CONSUL_PORT=
-CLOUD_CONSUL_DISCOVERY_HOSTNAME=
-CLOUD_CONSUL_DISCOVERY_PORT=
-CLOUD_CONSUL_DISCOVERY_REGISTER=
-CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_PATH=
-CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_INTERVAL=
-CLOUD_CONSUL_DISCOVERY_SERVICE_NAME=
-CLOUD_CONSUL_DISCOVERY_INSTANCE_ID=
+src/main/java/com/jobtracker/contact_service/
+├── controllers/
+│   ├── ContactController.java
+│   └── HealthController.java
+├── models/
+├── repositories/
+├── services/
+└── config/
 ```
-
----
-
-### Variable Reference
-
-| Key / Variable                                         | Description                                                        |
-|--------------------------------------------------------|--------------------------------------------------------------------|
-| `SERVER_PORT` / `server.port`                          | Port for the contact-service HTTP server                           |
-| `SPRING_APPLICATION_NAME` / `spring.application.name`   | Name of this service instance (for Consul etc.)                    |
-| `SPRING_DATA_MONGODB_URI`                              | MongoDB connection URI for "Contacts" database                     |
-| `SPRING_DATA_MONGODB_USERNAME`                         | MongoDB username                                                   |
-| `SPRING_DATA_MONGODB_PASSWORD`                         | MongoDB password                                                   |
-| `SPRING_RABBITMQ_HOST`                                 | RabbitMQ host/ip                                                   |
-| `SPRING_RABBITMQ_PORT`                                 | RabbitMQ port                                                      |
-| `SPRING_RABBITMQ_USERNAME`                             | RabbitMQ username                                                  |
-| `SPRING_RABBITMQ_PASSWORD`                             | RabbitMQ password                                                  |
-| `SPRING_RABBITMQ_CONTACT_QUEUE`                        | RabbitMQ queue for contact indexing                                |
-| `JOBTRACKER_RABBITMQ_EXCHANGE`                         | RabbitMQ exchange name for jobtracker events                       |
-| `JOBTRACKER_RABBITMQ_ROUTINGKEY_INTERVIEW_CREATED`      | Routing key for contact creation events                            |
-| `JOBTRACKER_RABBITMQ_ROUTINGKEY_INTERVIEW_UPDATED`      | Routing key for contact update events                              |
-| `CLOUD_CONSUL_HOST`                                    | Consul agent/server host                                           |
-| `CLOUD_CONSUL_PORT`                                    | Consul API port                                                    |
-| `CLOUD_CONSUL_DISCOVERY_HOSTNAME`                      | Host/IP to advertise to Consul for service discovery               |
-| `CLOUD_CONSUL_DISCOVERY_PORT`                          | Port to advertise to Consul (usually `${SERVER_PORT}`)             |
-| `CLOUD_CONSUL_DISCOVERY_REGISTER`                      | Whether to register the service in Consul (`true`/`false`)         |
-| `CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_PATH`             | HTTP path for Consul health checks                                 |
-| `CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_INTERVAL`         | Health check polling interval for Consul                           |
-| `CLOUD_CONSUL_DISCOVERY_SERVICE_NAME`                  | Name of service in Consul registry                                 |
-| `CLOUD_CONSUL_DISCOVERY_INSTANCE_ID`                   | Unique ID for this instance in Consul                              |
-
----
-
-> [🔗 Back to main Job Tracker README](../../README.md)  

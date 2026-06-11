@@ -1,186 +1,115 @@
-# 🖥️ JobTracker Frontend
+# JobTracker Frontend
 
-**JobTracker Frontend** is a modern React application built with Next.js 14 that provides a comprehensive user interface for job application tracking and management. It features a responsive design with dark/light theme support and real-time updates.
+Modern React single-page application built with Next.js 14 that provides a comprehensive user interface for job application tracking and management. Features a responsive design with dark/light theme support.
 
----
+## Tech Stack
 
-## 🛠️ Technology Stack
-
-- **Framework:** [Next.js 14](https://nextjs.org/) with App Router
+- **Framework:** Next.js 14 with App Router
 - **Language:** TypeScript
-- **Styling:** [Tailwind CSS](https://tailwindcss.com/)
-- **UI Components:** [Radix UI](https://www.radix-ui.com/) + [shadcn/ui](https://ui.shadcn.com/)
-- **Charts:** [Ant Design Charts](https://charts.ant.design/)
-- **Forms:** [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/)
+- **Styling:** Tailwind CSS
+- **UI Components:** Radix UI + shadcn/ui
+- **Charts:** Ant Design Charts
 - **State Management:** React Context API
-- **HTTP Client:** [Axios](https://axios-http.com/)
+- **HTTP Client:** Axios
 - **Authentication:** JWT-based with refresh tokens
 
----
+## Key Features
 
-## ✨ Key Features
-
-###  Analytics
-- Real-time application statistics
-- Interactive charts and graphs
+### Analytics Dashboard
+- Real-time application statistics with interactive charts
+- Monthly application trends (area chart)
+- Application status distribution (pie chart)
 - Recent activity feed
 
-###  Application Management
-- Create and edit job applications
-- Track application status and timeline
-- Company and position details
-- Advanced filtering and search
+### Application Management
+- Create, edit, and delete job applications
+- Track application status lifecycle (SAVED -> APPLIED -> INTERVIEW_SCHEDULED -> OFFER_RECEIVED -> REJECTED -> HIRED)
+- Company, position, location, salary, and job description tracking
+- Inline status updates via dialog
 
-###  Interview Scheduling
+### Interview Scheduling
 - Calendar integration
 - Interview type management
-- Interview preparation notes
 - Success tracking
 
-###  Profile Management
-- Personal information and skills
-- Work experience and education
-- Social media links
-- Profile photo upload
-- Resume management
+### Profile Management
+- Personal information, skills, and title
+- Resume upload and management
+- Avatar upload
+- Social links (GitHub, LinkedIn)
 
-###  Advanced Search
-- Real-time search across all data
-- Filter by multiple criteria
-- Saved search queries
-- Quick filters
+### Advanced Search
+- Real-time search across applications and profiles
+- Powered by Meilisearch backend
 
----
-
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
-- Node.js 18 or higher
-- npm or yarn package manager
-
-### 1. Clone the Repository
+- Node.js 18+
 
 ```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Frontend
-```
-
-### 2. Install Dependencies
-
-```bash
+# Install dependencies
 npm install
-# or
-yarn install
-```
 
-### 3. Configure Environment Variables
+# Configure environment
+# Create .env with:
+# NEXT_PUBLIC_API_URL=http://localhost:8000/api
 
-Create a `.env` file in the project root:
-
-```env
-# API Configuration
-NEXT_PUBLIC_API_URL=http://localhost:8000/api
-```
-
-### 4. Start the Development Server
-
-```bash
+# Start development server
 npm run dev
-# or
-yarn dev
 ```
 
-### 5. Access the Application
+Access the application at `http://localhost:3000`.
 
-- **Frontend:** http://localhost:3000
+## Environment Variables
 
----
+| Variable | Description | Default |
+|---|---|---|
+| `NEXT_PUBLIC_API_URL` | Backend API base URL via Kong | `http://localhost:8000/api` |
 
-## 📁 Project Structure
+## Theme System
+
+Supports dark and light themes with automatic system preference detection. Toggle available via the theme switcher in the dashboard header.
+
+## Authentication Flow
+
+1. User submits credentials to the auth service
+2. Auth service returns JWT access + refresh tokens
+3. Tokens are stored by the client and sent with every API request
+4. Kong gateway validates the JWT before routing to backend services
+
+## Project Structure
 
 ```
 Frontend/
-├── app/                          # Next.js App Router
-│   ├── (auth)/                   # Authentication pages
-│   │   ├── login/
-│   │   └── register/
-│   ├── dashboard/                # Main dashboard
-│   │   ├── page.tsx
-│   │   ├── layout.tsx             # Dashboard layout
-│   │   ├── analytics/
-│   │   ├── applications/
-│   │   ├── contacts/
-│   │   ├── interviews/
-│   │   ├── profile/
-│   │   └── settings/
-│   ├── globals.css               # Global styles
-│   ├── layout.tsx                # Root layout
-│   ├── page.tsx                  # Home page
+├── app/                          # Next.js App Router pages
+│   ├── (auth)/login/             # Login page
+│   ├── (auth)/register/          # Registration page
+│   ├── dashboard/                # Main application shell
+│   │   ├── analytics/            # Analytics dashboard
+│   │   ├── applications/         # Application management
+│   │   ├── contacts/             # Contact management
+│   │   ├── interviews/           # Interview scheduling
+│   │   ├── profile/              # User profile
+│   │   └── settings/             # Settings
+│   ├── globals.css
+│   ├── layout.tsx
+│   ├── page.tsx                  # Landing page
 │   └── types/                    # TypeScript type definitions
-├── components/                   # Reusable components
-│   ├── ui/                       # Base UI components (shadcn/ui)
-│   │   ├── button.tsx
-│   │   ├── input.tsx
-│   │   ├── dialog.tsx
-│   │   └── ...
-│   ├── theme-toggle.tsx          # Dark/light mode toggle
-│   ├── withAuth.tsx              # Higher-order component for authentication
-│   └── theme-provider.tsx        # Theme management
-├── context/                      # React context providers
-│   └──  AuthContext.tsx
-├── hooks/                        # Custom React hooks
-│   └── use-toast.ts
-├── lib/                          # Utility libraries
-│   └── utils.ts
-├── utils/                        # Utility functions
-│   ├── appClient.ts               # API client configuration
-│   ├── axios.ts                   # Axios instance with interceptors
-│   └── tokenService.ts            # Token management
 ├── api/                          # API integration modules
-│   ├── authApi/
 │   ├── applicationApi/
-│   ├── userApi/
-│   └── analyticsApi/
-├── constants/                    # Application constants
-└── public/                       # Static assets
+│   ├── analyticsApi/
+│   ├── authApi/
+│   └── userApi/
+├── components/                   # Reusable UI components
+│   ├── ui/                       # shadcn/ui primitives
+│   ├── theme-toggle.tsx
+│   ├── theme-provider.tsx
+│   └── withAuth.tsx
+├── constants/                    # Service URLs and constants
+├── context/                      # React context providers
+│   └── AuthContext.tsx
+├── hooks/
+├── lib/
+└── utils/
 ```
-
----
-
-## 🔧 Configuration
-
-### Environment Variables
-
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_API_URL` | Backend API base URL | http://localhost:8000/api |
-
----
-
-## 📱 Responsive Design
-
-The application is fully responsive and optimized for:
-
-- **Desktop:** Full-featured interface with sidebars and multiple columns
-- **Tablet:** Adapted layout with collapsible navigation
-- **Mobile:** Touch-optimized interface with bottom navigation
-
----
-
-## 🎨 Theme System
-
-### Dark/Light Mode Support
-The application supports both dark and light themes with automatic system preference detection:
-
-## 🔐 Authentication Flow
-
-### Login Process
-1. User enters credentials
-2. Frontend sends request to auth service
-3. Receives JWT access and refresh tokens
-4. Stores tokens securely
-5. Redirects to dashboard
-
----
-
-> [🔗 Back to main Job Tracker README](../README.md)

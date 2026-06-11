@@ -1,159 +1,71 @@
-#  Interview Service
+# Interview Service
 
-**Interview Service** is a Spring Boot microservice responsible for **managing user interviews** in the JobTracker application. It provides:
+Interview scheduling and management microservice for the JobTracker platform. Provides full CRUD over interview records with event-driven search index synchronization.
 
--  Interview creation, retrieval, updating, and deletion
--  Search functionality for user interviews
--  Integration with other microservices for user data
+## Tech Stack
 
-Built with Spring Boot, and MongoDB for robust interview management.
-
----
-
-## 🛠️ Technology Stack
-
-- **Framework:** Spring Boot 3.4.4
-- **Database:** MongoDB
-- **ORM:** Spring Data MongoDB
-- **Service Discovery:** Consul
+- **Runtime:** Java 17 (Spring Boot 3.4.5)
+- **Database:** MongoDB (Spring Data MongoDB)
+- **Service Discovery:** HashiCorp Consul
+- **Messaging:** RabbitMQ (Spring AMQP)
 - **Build Tool:** Maven
-- **Java Version:** JDK 17
 
----
+## API Endpoints
 
-## 🚀 Getting Started
+All routes are prefixed via Kong at `/api/interview-service`.
 
-### Prerequisites
-- Java 17 or higher
-- Maven 3.6+
-- MongoDB database
-- Consul (for service discovery)
+| Method | Path              | Description                          |
+|--------|-------------------|--------------------------------------|
+| GET    | `/interviews/`     | List all interviews                  |
+| POST   | `/interviews/`     | Create a new interview               |
+| GET    | `/interviews/{id}` | Get interview by ID                  |
+| PUT    | `/interviews/{id}` | Update an interview                  |
+| DELETE | `/interviews/{id}` | Delete an interview                  |
+| POST   | `/interviews/ids`  | Bulk retrieve interviews by IDs      |
+| GET    | `/health`          | Health check for Consul              |
 
-### Clone the Repository
+## Getting Started
 
 ```bash
-git clone https://github.com/ousaro/jobtrackerLocal.git
-cd jobtrackerLocal/Backend/interview_service
+# Build and run with Maven
+./mvnw spring-boot:run
 ```
 
-### Configure Database
+The service listens on port `5003` by default.
 
-Create a MongoDB database for the interview service.
+### Prerequisites
 
+- Java 17+
+- MongoDB
+- Consul agent
+- RabbitMQ
 
+## Configuration
 
-## ⚙️ Environment/Configuration Variables (`interview-service`)
+### Key Properties
 
-These are the essential configuration keys for the `interview-service`.  
-Add them to your `application.yaml`, `application.properties`, or pass as ENV vars (Spring Boot will automatically map most from ENV with the correct naming).
+| Key | Description |
+|---|---|
+| `server.port` | HTTP port |
+| `spring.data.mongodb.uri` | MongoDB connection URI |
+| `spring.rabbitmq.host` | RabbitMQ host |
+| `spring.rabbitmq.port` | RabbitMQ port |
+| `jobtracker.rabbitmq.exchange` | Topic exchange name |
+| `jobtracker.rabbitmq.routingkey.interview.created` | Routing key for create events |
+| `jobtracker.rabbitmq.routingkey.interview.updated` | Routing key for update events |
+| `cloud.consul.host` | Consul agent host |
+| `cloud.consul.port` | Consul agent port |
+| `cloud.consul.discovery.hostname` | Advertised hostname for Consul |
 
----
+## Project Structure
 
-### Example (`application.yaml` format)
-
-```yaml
-server:
-  port:
-
-spring:
-  application:
-    name:
-
-  data:
-    mongodb:
-      uri:
-      username:
-      password:
-
-  rabbitmq:
-    host:
-    port:
-    username:
-    password:
-    interview-queue:
-
-jobtracker:
-  rabbitmq:
-    exchange:
-    routingkey:
-      interview:
-        created:
-        updated:
-  
-  # Optionally add here any custom keys
-
-cloud:
-  consul:
-    host:
-    port:
-    discovery:
-      hostname:        # IP or name advertised for other services (for service discovery)
-      port:            # Typically resolves from ${server.port}
-      register:        # true/false to register in Consul
-      health-check-path:
-      health-check-interval:
-      service-name:
-      instance-id:
 ```
-
----
-
-### Variable Reference
-
-| Key/Variable                                       | Description                                                                    |
-|----------------------------------------------------|--------------------------------------------------------------------------------|
-| `server.port`                                      | Port interview-service listens on                                               |
-| `spring.application.name`                          | Service name for Spring Boot/Consul registration                                |
-| `spring.data.mongodb.uri`                          | MongoDB URI for "Interviews" database                                           |
-| `spring.data.mongodb.username`                     | MongoDB user                                                                   |
-| `spring.data.mongodb.password`                     | MongoDB password                                                               |
-| `spring.rabbitmq.host`                             | RabbitMQ server hostname                                                       |
-| `spring.rabbitmq.port`                             | RabbitMQ server port                                                           |
-| `spring.rabbitmq.username`                         | RabbitMQ user                                                                  |
-| `spring.rabbitmq.password`                         | RabbitMQ password                                                              |
-| `spring.rabbitmq.interview-queue`                  | RabbitMQ queue for interview events                                            |
-| `jobtracker.rabbitmq.exchange`                     | RabbitMQ exchange name                                                         |
-| `jobtracker.rabbitmq.routingkey.interview.created` | Routing key for interview created event                                         |
-| `jobtracker.rabbitmq.routingkey.interview.updated` | Routing key for interview updated event                                         |
-| `cloud.consul.host`                                | Consul agent/server hostname                                                    |
-| `cloud.consul.port`                                | Consul HTTP API port                                                           |
-| `cloud.consul.discovery.hostname`                  | Advertised address for this service in Consul                                  |
-| `cloud.consul.discovery.port`                      | Port advertised to Consul (usually `${server.port}`)                            |
-| `cloud.consul.discovery.register`                  | Whether to register in Consul (`true`/`false`)                                 |
-| `cloud.consul.discovery.health-check-path`         | Path for HTTP health check registered in Consul (`/health`)                     |
-| `cloud.consul.discovery.health-check-interval`     | Health check interval (`10s`)                                                   |
-| `cloud.consul.discovery.service-name`              | Service name for registration (`interview-service`)                             |
-| `cloud.consul.discovery.instance-id`               | Unique instance ID for the service in Consul                                    |
-
----
-
-### Example (Spring `.env` mapping):
-
-```env
-SERVER_PORT=
-SPRING_APPLICATION_NAME=
-SPRING_DATA_MONGODB_URI=
-SPRING_DATA_MONGODB_USERNAME=
-SPRING_DATA_MONGODB_PASSWORD=
-SPRING_RABBITMQ_HOST=
-SPRING_RABBITMQ_PORT=
-SPRING_RABBITMQ_USERNAME=
-SPRING_RABBITMQ_PASSWORD=
-SPRING_RABBITMQ_INTERVIEW_QUEUE=
-JOBTRACKER_RABBITMQ_EXCHANGE=
-JOBTRACKER_RABBITMQ_ROUTINGKEY_INTERVIEW_CREATED=
-JOBTRACKER_RABBITMQ_ROUTINGKEY_INTERVIEW_UPDATED=
-CLOUD_CONSUL_HOST=
-CLOUD_CONSUL_PORT=
-CLOUD_CONSUL_DISCOVERY_HOSTNAME=
-CLOUD_CONSUL_DISCOVERY_PORT=
-CLOUD_CONSUL_DISCOVERY_REGISTER=
-CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_PATH=
-CLOUD_CONSUL_DISCOVERY_HEALTH_CHECK_INTERVAL=
-CLOUD_CONSUL_DISCOVERY_SERVICE_NAME=
-CLOUD_CONSUL_DISCOVERY_INSTANCE_ID=
+src/main/java/com/jobtracker/interview_service/
+├── controllers/
+│   ├── InterviewController.java
+│   └── HealthController.java
+├── models/
+├── repositories/
+├── services/
+└── config/
 ```
-
----
-
-> [🔗 Back to main Job Tracker README](../../README.md)  
